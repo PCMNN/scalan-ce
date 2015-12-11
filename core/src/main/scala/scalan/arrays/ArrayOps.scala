@@ -293,7 +293,7 @@ trait ArrayOpsStd extends ArrayOps {
   def array_scan[T](xs: Array[T])(implicit m: RepMonoid[T], elem: Elem[T]): Rep[(Array[T], T)] = {
     val scan = xs.scan(m.zero)(m.append)
     val sum = scan.last
-    (scan.dropRight(1).toArray, sum)
+    (scan.dropRight(1), sum)
   }
 
   def array_replicate[T: Elem](len: Rep[Int], v: Rep[T]): Arr[T] = scala.Array.fill(len)(v)
@@ -308,7 +308,7 @@ trait ArrayOpsStd extends ArrayOps {
 
   def array_find[T](xs: Array[T], f: T => Boolean): Array[Int] = {
     val buf = scala.collection.mutable.ArrayBuffer.empty[Int]
-    for (i <- 0 until xs.length) {
+    for (i <- xs.indices) {
       if (f(xs(i))) buf += i
     }
     buf.toArray
@@ -478,7 +478,8 @@ trait ArrayOpsExp extends ArrayOps with JoinPrimitives with BaseExp { self: Scal
   def array_fold[T,S:Elem](xs: Arr[T], init:Rep[S], f:Rep[((S,T))=>S]): Rep[S] =
     withElemOfArray(xs) { implicit eT => ArrayFold(xs, init, f) }
 
-  def array_map_reduce[T,K:Elem,V:Elem](xs: Exp[Array[T]], map:Exp[T=>(K,V)], reduce:Exp[((V,V))=>V]) = ArrayMapReduce(xs, map, reduce)
+  def array_map_reduce[T,K:Elem,V:Elem](xs: Exp[Array[T]], map:Exp[T=>(K,V)], reduce:Exp[((V,V))=>V]) =
+    ArrayMapReduce(xs, map, reduce)
 
   def array_scan[T](xs: Arr[T])(implicit m: RepMonoid[T], elem : Elem[T]): Rep[(Array[T], T)] =
     ArrayScan(xs, m)
