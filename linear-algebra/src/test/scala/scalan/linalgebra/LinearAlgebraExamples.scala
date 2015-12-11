@@ -353,9 +353,9 @@ trait LinearAlgebraExamples extends MatricesDsl {
     val Tuple(is, vs, n) = p
     SparseVector(Collection(is), Collection(vs), n)
   }
-  lazy val sparseVector1 = fun { p: Rep[(Array[(Int, Double)], Int)] =>
+  lazy val sparseVectorBoxed = fun { p: Rep[(Array[(Int, Double)], Int)] =>
     val Tuple(arr, n) = p
-    SparseVector1(Collection(arr), n)
+    SparseVectorBoxed(Collection(arr), n)
   }
 
   lazy val flatMatrix = fun { p: Rep[(Array[Double], Int)] =>
