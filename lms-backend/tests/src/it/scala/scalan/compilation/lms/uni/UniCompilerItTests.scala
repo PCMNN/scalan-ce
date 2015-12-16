@@ -20,11 +20,11 @@ trait UniCompilerTestProg extends MsfFuncs with LinearAlgebraExamples {
     p+2.0
   }
 
-  lazy val mapArray = fun { p: Rep[Array[Double]] =>  //Rep[(Array[Array[Double]], Array[Double])]
-    val vector = DenseVector(Collection(p))
-    val res = vector.mapBy( fun{ r => r + 2.0 } )
-    res.items.arr
-  }
+//  lazy val mapArray = fun { p: Rep[Array[Double]] =>  //Rep[(Array[Array[Double]], Array[Double])]
+//    val vector = DenseVector(Collection(p))
+//    val res = vector.mapBy( fun{ r => r + 2.0 } )
+//    res.items.arr
+//  }
 
   lazy val zipArray = fun {x: Rep[Array[Int]] =>
     val x1 = x.map {y:Rep[Int] => y+2}
@@ -120,10 +120,10 @@ class UniCompilerItTests extends BaseItTests[UniCompilerTestProg](new GraphsDslS
     compareOutputWithSequential(_.oneOp)(in)
   }
 
-  test("mapArray") {
-    val in = Array(2.0, 3.0)
-    compareOutputWithSequential(_.mapArray)(in)
-  }
+//  test("mapArray") {
+//    val in = Array(2.0, 3.0)
+//    compareOutputWithSequential(_.mapArray)(in)
+//  }
 
   test("zipArray") {
     val in = Array(2, 3)

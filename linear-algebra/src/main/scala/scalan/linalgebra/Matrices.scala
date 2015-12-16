@@ -32,7 +32,7 @@ trait Matrices extends Vectors { self: MatricesDsl =>
     def apply(row: Rep[Int], column: Rep[Int]): Rep[T]
 
     //def mapBy[R: Elem](f: Rep[T => R @uncheckedVariance]): Matrix[R]
-    def mapBy[R: Elem](f: Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]): Matrix[R]
+    //def mapBy[R: Elem](f: Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]): Matrix[R]
 
     def transpose(implicit n: Numeric[T]): Matrix[T]
     def reduceByRows(implicit m: RepMonoid[T]): Vector[T] = {
@@ -90,9 +90,9 @@ trait Matrices extends Vectors { self: MatricesDsl =>
     def apply(row: Rep[Int]): Vector[T] = DenseVector(rmValues.slice(row * numColumns, numColumns))
     def apply(row: Rep[Int], column: Rep[Int]): Rep[T] = items(toCellIndex(row, column))
 
-    def mapBy[R: Elem](f: Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]): Matrix[R] = {
-      DenseFlatMatrix.fromRows(rows.mapBy(f), numColumns)
-    }
+    //def mapBy[R: Elem](f: Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]): Matrix[R] = {
+    //      DenseFlatMatrix.fromRows(rows.mapBy(f), numColumns)
+    //    }
 
     def fromCellIndex(iCell: Rep[Int]): Rep[(Int, Int)] = Pair(iCell /! numColumns, iCell % numColumns)
     def toCellIndex(iRow: Rep[Int], iCol: Rep[Int]): Rep[Int] = numColumns * iRow + iCol
@@ -207,9 +207,9 @@ trait Matrices extends Vectors { self: MatricesDsl =>
     def apply(row: Rep[Int]): Vector[T] = rows(row)
     def apply(row: Rep[Int], column: Rep[Int]): Rep[T] = apply(row)(column)
 
-    def mapBy[R: Elem](f: Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]): Matrix[R] = {
-      CompoundMatrix(rows.mapBy(f), numColumns)
-    }
+    //def mapBy[R: Elem](f: Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]): Matrix[R] = {
+    //  CompoundMatrix(rows.mapBy(f), numColumns)
+    //}
 
     def transpose(implicit n: Numeric[T]): Matrix[T] = transposeDirect(self)
 
@@ -316,12 +316,12 @@ trait Matrices extends Vectors { self: MatricesDsl =>
     def apply(row: Rep[Int]): Vector[T] = ConstVector(constItem, numColumns)
     def apply(row: Rep[Int], column: Rep[Int]): Rep[T] = constItem
 
-    def mapBy[R: Elem](f: Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]): Matrix[R] = {
-      // TODO: need a way to check @f for closure & effectfulness
-      // TODO: in opposite case we can optimize this map due to constant input
-      // TODO: -OR- we can use optimization rules in lower levels of Scalan
-      DenseFlatMatrix.fromRows(rows.mapBy(f), numColumns)
-    }
+    //def mapBy[R: Elem](f: Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]): Matrix[R] = {
+    //  // TODO: need a way to check @f for closure & effectfulness
+    //  // TODO: in opposite case we can optimize this map due to constant input
+    //  // TODO: -OR- we can use optimization rules in lower levels of Scalan
+    //  DenseFlatMatrix.fromRows(rows.mapBy(f), numColumns)
+    //}
 
     def transpose(implicit n: Numeric[T]): Matrix[T] = ConstMatrix(constItem, numRows, numColumns)
 
@@ -422,9 +422,9 @@ trait Matrices extends Vectors { self: MatricesDsl =>
     def apply(row: Rep[Int]): Vector[T] = SparseVector(Collection.replicate(1, row), diagonalValues.slice(row, 1), numColumns)
     def apply(row: Rep[Int], column: Rep[Int]): Rep[T] = IF (row === column) THEN diagonalValues(row) ELSE eT.defaultRepValue
 
-    def mapBy[R: Elem](f: Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]): Matrix[R] = {
-      DenseFlatMatrix.fromRows(rows.mapBy(f), numColumns)
-    }
+    //def mapBy[R: Elem](f: Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]): Matrix[R] = {
+    //  DenseFlatMatrix.fromRows(rows.mapBy(f), numColumns)
+    //}
 
     def transpose(implicit n: Numeric[T]): Matrix[T] = self
 
@@ -506,9 +506,9 @@ trait Matrices extends Vectors { self: MatricesDsl =>
     def apply(row: Rep[Int]): Vector[T] = SparseVector(Collection.singleton(row), Collection.singleton(constItem), numColumns)
     def apply(row: Rep[Int], column: Rep[Int]): Rep[T] = IF (row === column) THEN constItem ELSE zeroValue
 
-    def mapBy[R: Elem](f: Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]): Matrix[R] = {
-      CompoundMatrix(rows.mapBy(f), numColumns)
-    }
+    //def mapBy[R: Elem](f: Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]): Matrix[R] = {
+    //  CompoundMatrix(rows.mapBy(f), numColumns)
+    //}
 
     def transpose(implicit n: Numeric[T]): Matrix[T] = self
 
@@ -644,7 +644,7 @@ trait MatricesDsl extends impl.MatricesAbs with VectorsDsl { self: ScalanDsl =>
   implicit class MatrixExtensions[T](matrix: Matrix[T]) {
     implicit def eItem: Elem[T] = matrix.selfType1.asInstanceOf[AbstractMatrixElem[T, _]].eT
 
-    def map[R: Elem](f: Vector[T] => Vector[R]): Matrix[R] = matrix.mapBy(fun(f))
+    //def map[R: Elem](f: Vector[T] => Vector[R]): Matrix[R] = matrix.mapBy(fun(f))
 
     //def filter(f: Rep[T] => Rep[Boolean]): Matrix[T] = matrix.filterBy(fun(f))
 

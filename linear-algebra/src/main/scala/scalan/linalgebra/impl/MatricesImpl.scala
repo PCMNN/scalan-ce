@@ -684,18 +684,6 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
       }
     }
 
-    object mapBy {
-      def unapply(d: Def[_]): Option[(Rep[DenseFlatMatrix[T]], Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]) forSome {type T; type R}] = d match {
-        case MethodCall(receiver, method, Seq(f, _*), _) if receiver.elem.isInstanceOf[DenseFlatMatrixElem[_]] && method.getName == "mapBy" =>
-          Some((receiver, f)).asInstanceOf[Option[(Rep[DenseFlatMatrix[T]], Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]) forSome {type T; type R}]]
-        case _ => None
-      }
-      def unapply(exp: Exp[_]): Option[(Rep[DenseFlatMatrix[T]], Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]) forSome {type T; type R}] = exp match {
-        case Def(d) => unapply(d)
-        case _ => None
-      }
-    }
-
     object fromCellIndex {
       def unapply(d: Def[_]): Option[(Rep[DenseFlatMatrix[T]], Rep[Int]) forSome {type T}] = d match {
         case MethodCall(receiver, method, Seq(iCell, _*), _) if receiver.elem.isInstanceOf[DenseFlatMatrixElem[_]] && method.getName == "fromCellIndex" =>
@@ -990,18 +978,6 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
       }
     }
 
-    object mapBy {
-      def unapply(d: Def[_]): Option[(Rep[CompoundMatrix[T]], Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]) forSome {type T; type R}] = d match {
-        case MethodCall(receiver, method, Seq(f, _*), _) if receiver.elem.isInstanceOf[CompoundMatrixElem[_]] && method.getName == "mapBy" =>
-          Some((receiver, f)).asInstanceOf[Option[(Rep[CompoundMatrix[T]], Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]) forSome {type T; type R}]]
-        case _ => None
-      }
-      def unapply(exp: Exp[_]): Option[(Rep[CompoundMatrix[T]], Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]) forSome {type T; type R}] = exp match {
-        case Def(d) => unapply(d)
-        case _ => None
-      }
-    }
-
     object transpose {
       def unapply(d: Def[_]): Option[(Rep[CompoundMatrix[T]], Numeric[T]) forSome {type T}] = d match {
         case MethodCall(receiver, method, Seq(n, _*), _) if receiver.elem.isInstanceOf[CompoundMatrixElem[_]] && method.getName == "transpose" =>
@@ -1255,18 +1231,6 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
         case _ => None
       }
       def unapply(exp: Exp[_]): Option[(Rep[ConstMatrix[T]], Rep[Int], Rep[Int]) forSome {type T}] = exp match {
-        case Def(d) => unapply(d)
-        case _ => None
-      }
-    }
-
-    object mapBy {
-      def unapply(d: Def[_]): Option[(Rep[ConstMatrix[T]], Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]) forSome {type T; type R}] = d match {
-        case MethodCall(receiver, method, Seq(f, _*), _) if receiver.elem.isInstanceOf[ConstMatrixElem[_]] && method.getName == "mapBy" =>
-          Some((receiver, f)).asInstanceOf[Option[(Rep[ConstMatrix[T]], Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]) forSome {type T; type R}]]
-        case _ => None
-      }
-      def unapply(exp: Exp[_]): Option[(Rep[ConstMatrix[T]], Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]) forSome {type T; type R}] = exp match {
         case Def(d) => unapply(d)
         case _ => None
       }
@@ -1578,18 +1542,6 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
       }
     }
 
-    object mapBy {
-      def unapply(d: Def[_]): Option[(Rep[DiagonalMatrix[T]], Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]) forSome {type T; type R}] = d match {
-        case MethodCall(receiver, method, Seq(f, _*), _) if receiver.elem.isInstanceOf[DiagonalMatrixElem[_]] && method.getName == "mapBy" =>
-          Some((receiver, f)).asInstanceOf[Option[(Rep[DiagonalMatrix[T]], Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]) forSome {type T; type R}]]
-        case _ => None
-      }
-      def unapply(exp: Exp[_]): Option[(Rep[DiagonalMatrix[T]], Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]) forSome {type T; type R}] = exp match {
-        case Def(d) => unapply(d)
-        case _ => None
-      }
-    }
-
     object transpose {
       def unapply(d: Def[_]): Option[(Rep[DiagonalMatrix[T]], Numeric[T]) forSome {type T}] = d match {
         case MethodCall(receiver, method, Seq(n, _*), _) if receiver.elem.isInstanceOf[DiagonalMatrixElem[_]] && method.getName == "transpose" =>
@@ -1860,18 +1812,6 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
       }
     }
 
-    object mapBy {
-      def unapply(d: Def[_]): Option[(Rep[ConstDiagonalMatrix[T]], Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]) forSome {type T; type R}] = d match {
-        case MethodCall(receiver, method, Seq(f, _*), _) if receiver.elem.isInstanceOf[ConstDiagonalMatrixElem[_]] && method.getName == "mapBy" =>
-          Some((receiver, f)).asInstanceOf[Option[(Rep[ConstDiagonalMatrix[T]], Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]) forSome {type T; type R}]]
-        case _ => None
-      }
-      def unapply(exp: Exp[_]): Option[(Rep[ConstDiagonalMatrix[T]], Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]) forSome {type T; type R}] = exp match {
-        case Def(d) => unapply(d)
-        case _ => None
-      }
-    }
-
     object transpose {
       def unapply(d: Def[_]): Option[(Rep[ConstDiagonalMatrix[T]], Numeric[T]) forSome {type T}] = d match {
         case MethodCall(receiver, method, Seq(n, _*), _) if receiver.elem.isInstanceOf[ConstDiagonalMatrixElem[_]] && method.getName == "transpose" =>
@@ -2119,18 +2059,6 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
         case _ => None
       }
       def unapply(exp: Exp[_]): Option[(Rep[AbstractMatrix[T]], Rep[Int], Rep[Int]) forSome {type T}] = exp match {
-        case Def(d) => unapply(d)
-        case _ => None
-      }
-    }
-
-    object mapBy {
-      def unapply(d: Def[_]): Option[(Rep[AbstractMatrix[T]], Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]) forSome {type T; type R}] = d match {
-        case MethodCall(receiver, method, Seq(f, _*), _) if receiver.elem.isInstanceOf[AbstractMatrixElem[_, _]] && method.getName == "mapBy" =>
-          Some((receiver, f)).asInstanceOf[Option[(Rep[AbstractMatrix[T]], Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]) forSome {type T; type R}]]
-        case _ => None
-      }
-      def unapply(exp: Exp[_]): Option[(Rep[AbstractMatrix[T]], Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]) forSome {type T; type R}] = exp match {
         case Def(d) => unapply(d)
         case _ => None
       }
