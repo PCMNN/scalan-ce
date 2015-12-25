@@ -9,7 +9,7 @@ import scalan.meta.ScalanAst._
 package impl {
 // Abs -----------------------------------
 trait MatricesAbs extends scalan.ScalanDsl with Matrices {
-  self: MatricesDsl =>
+  self: LADsl =>
 
   // single proxy for each type family
   implicit def proxyAbstractMatrix[T](p: Rep[AbstractMatrix[T]]): AbstractMatrix[T] = {
@@ -490,7 +490,7 @@ trait MatricesAbs extends scalan.ScalanDsl with Matrices {
 
 // Seq -----------------------------------
 trait MatricesSeq extends scalan.ScalanDslStd with MatricesDsl {
-  self: MatricesDslSeq =>
+  self: LADslSeq =>
   lazy val AbstractMatrix: Rep[AbstractMatrixCompanionAbs] = new AbstractMatrixCompanionAbs {
   }
 
@@ -567,7 +567,7 @@ trait MatricesSeq extends scalan.ScalanDslStd with MatricesDsl {
 
 // Exp -----------------------------------
 trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
-  self: MatricesDslExp =>
+  self: LADslExp =>
   lazy val AbstractMatrix: Rep[AbstractMatrixCompanionAbs] = new AbstractMatrixCompanionAbs {
   }
 
@@ -639,6 +639,18 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
     object diagonalValues {
       def unapply(d: Def[_]): Option[Rep[DenseFlatMatrix[T]] forSome {type T}] = d match {
         case MethodCall(receiver, method, _, _) if receiver.elem.isInstanceOf[DenseFlatMatrixElem[_]] && method.getName == "diagonalValues" =>
+          Some(receiver).asInstanceOf[Option[Rep[DenseFlatMatrix[T]] forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[Rep[DenseFlatMatrix[T]] forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+
+    object replicatedRow {
+      def unapply(d: Def[_]): Option[Rep[DenseFlatMatrix[T]] forSome {type T}] = d match {
+        case MethodCall(receiver, method, _, _) if receiver.elem.isInstanceOf[DenseFlatMatrixElem[_]] && method.getName == "replicatedRow" =>
           Some(receiver).asInstanceOf[Option[Rep[DenseFlatMatrix[T]] forSome {type T}]]
         case _ => None
       }
@@ -930,6 +942,18 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
       }
     }
 
+    object replicatedRow {
+      def unapply(d: Def[_]): Option[Rep[CompoundMatrix[T]] forSome {type T}] = d match {
+        case MethodCall(receiver, method, _, _) if receiver.elem.isInstanceOf[CompoundMatrixElem[_]] && method.getName == "replicatedRow" =>
+          Some(receiver).asInstanceOf[Option[Rep[CompoundMatrix[T]] forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[Rep[CompoundMatrix[T]] forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+
     object apply_rows {
       def unapply(d: Def[_]): Option[(Rep[CompoundMatrix[T]], Coll[Int]) forSome {type T}] = d match {
         case MethodCall(receiver, method, Seq(iRows, _*), _) if receiver.elem.isInstanceOf[CompoundMatrixElem[_]] && method.getName == "apply" && { val ann = method.getAnnotation(classOf[scalan.OverloadId]); ann != null && ann.value == "rows" } =>
@@ -1167,6 +1191,18 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
     object diagonalValues {
       def unapply(d: Def[_]): Option[Rep[ConstMatrix[T]] forSome {type T}] = d match {
         case MethodCall(receiver, method, _, _) if receiver.elem.isInstanceOf[ConstMatrixElem[_]] && method.getName == "diagonalValues" =>
+          Some(receiver).asInstanceOf[Option[Rep[ConstMatrix[T]] forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[Rep[ConstMatrix[T]] forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+
+    object replicatedRow {
+      def unapply(d: Def[_]): Option[Rep[ConstMatrix[T]] forSome {type T}] = d match {
+        case MethodCall(receiver, method, _, _) if receiver.elem.isInstanceOf[ConstMatrixElem[_]] && method.getName == "replicatedRow" =>
           Some(receiver).asInstanceOf[Option[Rep[ConstMatrix[T]] forSome {type T}]]
         case _ => None
       }
@@ -1446,6 +1482,18 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
       }
     }
 
+    object replicatedRow {
+      def unapply(d: Def[_]): Option[Rep[DiagonalMatrix[T]] forSome {type T}] = d match {
+        case MethodCall(receiver, method, _, _) if receiver.elem.isInstanceOf[DiagonalMatrixElem[_]] && method.getName == "replicatedRow" =>
+          Some(receiver).asInstanceOf[Option[Rep[DiagonalMatrix[T]] forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[Rep[DiagonalMatrix[T]] forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+
     object columns {
       def unapply(d: Def[_]): Option[Rep[DiagonalMatrix[T]] forSome {type T}] = d match {
         case MethodCall(receiver, method, _, _) if receiver.elem.isInstanceOf[DiagonalMatrixElem[_]] && method.getName == "columns" =>
@@ -1695,6 +1743,18 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
     object diagonalValues {
       def unapply(d: Def[_]): Option[Rep[ConstDiagonalMatrix[T]] forSome {type T}] = d match {
         case MethodCall(receiver, method, _, _) if receiver.elem.isInstanceOf[ConstDiagonalMatrixElem[_]] && method.getName == "diagonalValues" =>
+          Some(receiver).asInstanceOf[Option[Rep[ConstDiagonalMatrix[T]] forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[Rep[ConstDiagonalMatrix[T]] forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+
+    object replicatedRow {
+      def unapply(d: Def[_]): Option[Rep[ConstDiagonalMatrix[T]] forSome {type T}] = d match {
+        case MethodCall(receiver, method, _, _) if receiver.elem.isInstanceOf[ConstDiagonalMatrixElem[_]] && method.getName == "replicatedRow" =>
           Some(receiver).asInstanceOf[Option[Rep[ConstDiagonalMatrix[T]] forSome {type T}]]
         case _ => None
       }
@@ -1956,6 +2016,18 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
       }
     }
 
+    object replicatedRow {
+      def unapply(d: Def[_]): Option[Rep[AbstractMatrix[T]] forSome {type T}] = d match {
+        case MethodCall(receiver, method, _, _) if receiver.elem.isInstanceOf[AbstractMatrixElem[_, _]] && method.getName == "replicatedRow" =>
+          Some(receiver).asInstanceOf[Option[Rep[AbstractMatrix[T]] forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[Rep[AbstractMatrix[T]] forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+
     object apply_rowsByVector {
       def unapply(d: Def[_]): Option[(Rep[AbstractMatrix[T]], Vector[Int]) forSome {type T}] = d match {
         case MethodCall(receiver, method, Seq(vector, _*), _) if receiver.elem.isInstanceOf[AbstractMatrixElem[_, _]] && method.getName == "apply" && { val ann = method.getAnnotation(classOf[scalan.OverloadId]); ann != null && ann.value == "rowsByVector" } =>
@@ -2043,6 +2115,30 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
     object reduceByColumns {
       def unapply(d: Def[_]): Option[(Rep[AbstractMatrix[T]], RepMonoid[T], Numeric[T]) forSome {type T}] = d match {
         case MethodCall(receiver, method, Seq(m, n, _*), _) if receiver.elem.isInstanceOf[AbstractMatrixElem[_, _]] && method.getName == "reduceByColumns" =>
+          Some((receiver, m, n)).asInstanceOf[Option[(Rep[AbstractMatrix[T]], RepMonoid[T], Numeric[T]) forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[(Rep[AbstractMatrix[T]], RepMonoid[T], Numeric[T]) forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+
+    object sumByRows {
+      def unapply(d: Def[_]): Option[(Rep[AbstractMatrix[T]], RepMonoid[T]) forSome {type T}] = d match {
+        case MethodCall(receiver, method, Seq(m, _*), _) if receiver.elem.isInstanceOf[AbstractMatrixElem[_, _]] && method.getName == "sumByRows" =>
+          Some((receiver, m)).asInstanceOf[Option[(Rep[AbstractMatrix[T]], RepMonoid[T]) forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[(Rep[AbstractMatrix[T]], RepMonoid[T]) forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+
+    object sumByColumns {
+      def unapply(d: Def[_]): Option[(Rep[AbstractMatrix[T]], RepMonoid[T], Numeric[T]) forSome {type T}] = d match {
+        case MethodCall(receiver, method, Seq(m, n, _*), _) if receiver.elem.isInstanceOf[AbstractMatrixElem[_, _]] && method.getName == "sumByColumns" =>
           Some((receiver, m, n)).asInstanceOf[Option[(Rep[AbstractMatrix[T]], RepMonoid[T], Numeric[T]) forSome {type T}]]
         case _ => None
       }
@@ -2166,7 +2262,7 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
 }
 
 object Matrices_Module extends scalan.ModuleInfo {
-  val dump = "H4sIAAAAAAAAAM1YTWwbRRSedez4L3L6CwEREYIBgWicglAPOVTBSSDITaJsqJCpQOP1xN0yO7uZGQebQ489wA1xRaISF6ReECeEVCEhJMSBE6qQOHMqRVUP7aEC8Wa8u14764S4IYoPo92dee9973vfm531jTsoJTh6XliYYjbjEIlnTH09L2TRXGTSlu0Lbr1JyQLZnHC//+LsV09+m0DjVTR6GYsFQaso27lYbHnhtUm2KiiLmUWEdLmQ6JmKjlCyXEqJJW2XlWzHaUpco6RUsYWcq6Bkza23t9BVZFTQMctlFieSmGWKhSDCf54hCpEd3mf1fXvV68ZgJZVFKZLFBse2BPgQ41hn/TrxzDZzWduRqOBDW/UULFiTth3P5TIIkQZ3l916cJtkGB6gE5UreBuXIESjZEpuswZY5j1sfYAbZAWWqOVJACwI3dxoe/p+pIJygmwBQcuOR/WTlocQggq8okHMdPmZCfmZUfwUTcJtTO2PsJpc426rjTo/YwShlgcuXt7DReCBLLJ68eNL1rsPzLyTUMYtBSWtMxwFR08PUIMuBfD40/qn4t4b188lUK6KcraYrwnJsSWjJffZymPGXKkxhwRi3oBqTQ+qlo4yD2v6JJG1XMfDDDz5VI5Bnaht2VItVs/G/OoMoD4tPRIsNVqeEeY7NSBfrZsypnTt9hNnnvtz8Z0ESvSGyIJLE4TPA6cgp4CNCxhk0fKDqHFcImNDM62GbKs7pncBEdLxwu2/6j/OokuJkEQ/5n+rG7hIid9u5X998XwCZapa5UsUN6rAo1ikxFnlZZfJKsq424R3ZtLbmKqr2Dqm62QTN6n02Y3SMgK0SDQ1sB89ojib09o3AgLyHfmuuIwUl9aK982fP7uh1MnRWGem06D/2Of+/r2wKbVwJcpw5yKmTSICikegt3tJz5XDjtizGnpqIoSlhknwwJoOOGk6LC4MR88OEpBH1rjtwIa1TV774bu3795cSWkNnfC509A724dPXZdGlZ0xC5GWmYwTTK7Diuk65Pj0Pfu9659ILQ2j1bs7rdauQPJz2u6pXVQS7JJfX7t2+u6X75/U3Z2p2dLBXnF2H70dtOL/2Luot5CFsv+20Eo/2zs5vkCYICBjvyMHdKAaT4dzncpDBSb6rMvRRCYjppGgE0affhJkI0CTVK22pwzjUU+GgpscLDhg6bH1yil65/zNBEq9hVKb0MCiglI1t8nqAf3wepWkJV8Pnhm99APdmGMnpFv/plA35z7UemHe6KvKUDvhDjL7mzHJ3Q+H6fYQzkWY9VW8F5yhNgQ1nIlPbFaPr+5HvgWlOFWmYdT7eK/xYYk3BvNkxOzNI6Un2JuYkMvSzyxWVDvBDS2JeOs0WK/H6vpg1ZQvq2SHkdKpiOVh6agf7dEVUaFu44bLMD3Iw8hB7B4LPq6hdo9e40PbPXZiPrqFP+TdI4Kty8tBF+CkbrtHrUIk3dFY4Y7AYfPRazRAw7s0TF6dK5ewY9N2f7f0xt9nt/Qax3TLzq/DYVlV48PuGn9hRjtVh3R03D8gUhsq2CA1jn1COJoecHY0/RM3VOXqg89XXvrlmz/0t0pOnd3ho4yF/4hEv1H6qA0QLAgaAQ3SU+d5DfhfEVG8RXISAAA="
+  val dump = "H4sIAAAAAAAAAM1YTWwbRRSedeL4L0r6CwEREYIBgWicglAPOVTBSSDITaJsqJCpQOP1xN0yO7uZGQebQ489wA1xRaISF6ReECeEVCEhJMSBE6qQOHMqRVUP7aEC8Wa8u9511glxQxQfRrs789773ve+NzvrG3dQWnD0vLAwxWzGIRLPmPp6XsiiucikLdsX3HqTkgWyOeF+/8XZr578NoXGq2jkMhYLglZRrnOx2PLCa5NsVVAOM4sI6XIh0TMVHaFkuZQSS9ouK9mO05S4RkmpYgs5V0HDNbfe3kJXkVFBxyyXWZxIYpYpFoII/3mWKER2eJ/T9+1VrxuDlVQWpUgWGxzbEuBDjGOd9evEM9vMZW1HojEf2qqnYMGajO14LpdBiAy4u+zWg9thhuEBOlG5grdxCUI0SqbkNmuAZcHD1ge4QVZgiVo+DIAFoZsbbU/fD1VQXpAtIGjZ8ah+0vIQQlCBVzSImS4/MyE/M4qfokm4jan9EVaTa9xttVHnZwwh1PLAxct7uAg8kEVWL358yXr3gVlwUsq4paBkdIYj4OjpPmrQpQAef1r/VNx74/q5FMpXUd4W8zUhObZktOQ+WwXMmCs15pBAzBtQrel+1dJR5mFNjyRylut4mIEnn8pRqBO1LVuqxerZqF+dPtRnpEeCpUbLM8J8p/rkq3VTxpSu3X7izHN/Lr6TQql4iBy4NEH4PHAKcgrYuIBBFi0/iBrHJTI2NNNqyLW6Y2YXECEdL9z+q/7jLLqUCkn0Y/63uoGLtPjtVuHXF8+nULaqVb5EcaMKPIpFSpxVXnaZrKKsu014Zyazjam6Sqxjpk42cZNKn90oLUNAi0RTffvRI4qzOa19IyCg0JHvistIcWmteN/8+bMbSp0cjXZmOg36j33u79/HNqUWrkRZ7lzEtElEQPEQ9Hac9Hw57Ig9q6GnJkJYapgED6zpgJOmw5LCcPRsPwF5ZI3bDmxY2+S1H757++7NlbTW0AmfOw29s3341HVpVNkZsxBpmckkweQ7rJiuQ45P37Pfu/6J1NIwWvHdabV2BZKf03ZP7aKSYJf8+tq103e/fP+k7u5szZYO9oqz++jtoBX/x95F8UKOlf23hVb62fjk+AJhgoCM/Y7s04FqPB3OdSoPFZjosS5HE5mMmEaCThg9+kmRjQDNsGq1PWWYjHoyFNxkf8EBS4+tV07RO+dvplD6LZTehAYWFZSuuU1WD+iH16skLfl68MyI0w90Y46dkG79m0LdnHtQ64UFo6cqA+2EO8jsbcZh7n44SLeHcC7CrK/iveAMtCGo4UxyYrN6fHU/8h1TilNlGkS9j8eND0u8CZgnI2ZvHik9wd7EhFyWfmaJotoJbmBJJFtnwHo9UdcHq6ZCWSU7iJRORSwPS0e9aI+uiMbqNm64DNODPIwcxO6x4OMaaPeIGx/a7rET89Et/CHvHhFsXV4OugAndds9ahUi6Y4kCncIDpuPXqM+Gt6lYQrqXLmEHZu2e7slHn+f3RI3TuiWnV+Hg7KqxofdNf7CrHaqDunouH9ApDZUsEFqHPuEcDTd5+xo+iduqMrVB5+vvPTLN3/ob5W8OrvDRxkL/xGJfqPECUxX5hcEjcAF0amTvIb6L4deZIZsEgAA"
 }
 }
 

@@ -213,10 +213,9 @@ trait ArrayOps { self: Scalan =>
   }
 }
 
-trait ArrayOpsSeq extends ArrayOps {
-  self: ScalanSeq =>
+trait ArrayOpsSeq extends ArrayOps { self: ScalanSeq =>
 
-  import TagImplicits.elemToClassTag
+  import TagImplicits.elemToClassTag  // do not remove, it's NOT unused
 
   def array_apply[T](x: Arr[T], n: Rep[Int]): Rep[T] = x(n)
 
@@ -243,14 +242,18 @@ trait ArrayOpsSeq extends ArrayOps {
 
   def array_update[T](xs: Arr[T], index: Rep[Int], value: Rep[T]): Arr[T] = {
     implicit val ct = arrayToClassTag(xs)
-    xs.update(index, value)
-    xs
+    //xs.update(index, value) //in-place operation contradicts with lms
+    val xs1 = xs.clone()
+    xs1.update(index, value)
+    xs1
   }
 
   def array_updateMany[T](xs: Arr[T], indexes: Arr[Int], values: Arr[T]): Arr[T] = {
     implicit val ct = arrayToClassTag(xs)
-    (0 until indexes.length).foreach(i => xs.update(indexes(i), values(i)))
-    xs
+    //(0 until indexes.length).foreach(i => xs.update(indexes(i), values(i))) //in-place operation contradicts with lms
+    val xs1 = xs.clone()
+    (0 until indexes.length).foreach(i => xs1.update(indexes(i), values(i)))
+    xs1
   }
 
   def array_append[T](xs: Arr[T], value: Rep[T]): Arr[T] = {
@@ -287,7 +290,7 @@ trait ArrayOpsSeq extends ArrayOps {
   def array_scan[T](xs: Array[T])(implicit m: RepMonoid[T], elem: Elem[T]): Rep[(Array[T], T)] = {
     val scan = xs.scan(m.zero)(m.append)
     val sum = scan.last
-    (scan.dropRight(1).toArray, sum)
+    (scan.dropRight(1), sum)
   }
 
   def array_replicate[T: Elem](len: Rep[Int], v: Rep[T]): Arr[T] = scala.Array.fill(len)(v)
@@ -297,12 +300,11 @@ trait ArrayOpsSeq extends ArrayOps {
 
   def array_rangeFrom0(n: Rep[Int]): Arr[Int] = 0.until(n).toArray
 
-  def array_filter[T](xs: Array[T], f: T => Boolean): Array[T] =
-    genericArrayOps(xs).filter(f)
+  def array_filter[T](xs: Array[T], f: T => Boolean): Array[T] = genericArrayOps(xs).filter(f)
 
   def array_find[T](xs: Array[T], f: T => Boolean): Array[Int] = {
     val buf = scala.collection.mutable.ArrayBuffer.empty[Int]
-    for (i <- 0 until xs.length) {
+    for (i <- xs.indices) {
       if (f(xs(i))) buf += i
     }
     buf.toArray
@@ -380,10 +382,7 @@ trait ArrayOpsSeq extends ArrayOps {
 }
 
 trait ArrayOpsExp extends ArrayOps with BaseExp { self: ScalanExp =>
-  def withElemOfArray[T, R](xs: Arr[T])(block: Elem[T] => R): R =
-    withElemOf(xs) { eTArr =>
-      block(eTArr.eItem)
-    }
+  def withElemOfArray[T, R](xs: Arr[T])(block: Elem[T] => R): R = withElemOf(xs) { eTArr => block(eTArr.eItem) }
 
   abstract class ArrayDef[T](implicit val eItem: Elem[T]) extends Def[Array[T]] {
     lazy val selfType = element[Array[T]]
@@ -471,7 +470,8 @@ trait ArrayOpsExp extends ArrayOps with BaseExp { self: ScalanExp =>
   def array_fold[T,S:Elem](xs: Arr[T], init:Rep[S], f:Rep[((S,T))=>S]): Rep[S] =
     withElemOfArray(xs) { implicit eT => ArrayFold(xs, init, f) }
 
-  def array_map_reduce[T,K:Elem,V:Elem](xs: Exp[Array[T]], map:Exp[T=>(K,V)], reduce:Exp[((V,V))=>V]) = ArrayMapReduce(xs, map, reduce)
+  def array_map_reduce[T,K:Elem,V:Elem](xs: Exp[Array[T]], map:Exp[T=>(K,V)], reduce:Exp[((V,V))=>V]) =
+    ArrayMapReduce(xs, map, reduce)
 
   def array_scan[T](xs: Arr[T])(implicit m: RepMonoid[T], elem : Elem[T]): Rep[(Array[T], T)] =
     ArrayScan(xs, m)
@@ -527,7 +527,7 @@ trait ArrayOpsExp extends ArrayOps with BaseExp { self: ScalanExp =>
     exp match {
       case Def(Tup(l, r)) => accessOnlyFirst(x, l) && accessOnlyFirst(x, r)
       case Def(Second(t)) => accessOnlyFirst(x, t)
-      case Def(First(t)) => (t == x || accessOnlyFirst(x, t))
+      case Def(First(t)) => t == x || accessOnlyFirst(x, t)
       case Def(ApplyBinOp(op, l, r)) => accessOnlyFirst(x, l) && accessOnlyFirst(x, r)
       case Def(ApplyUnOp(opr, opd)) => accessOnlyFirst(x, opd)
       case Def(Const(_)) => true
@@ -539,7 +539,7 @@ trait ArrayOpsExp extends ArrayOps with BaseExp { self: ScalanExp =>
     exp match {
       case Def(Tup(l, r)) => accessOnlySecond(x, l) && accessOnlySecond(x, r)
       case Def(First(t)) => accessOnlySecond(x, t)
-      case Def(Second(t)) => (t == x || accessOnlySecond(x, t))
+      case Def(Second(t)) => t == x || accessOnlySecond(x, t)
       case Def(ApplyBinOp(op, l, r)) => accessOnlySecond(x, l) && accessOnlySecond(x, r)
       case Def(ApplyUnOp(opr, opd)) => accessOnlySecond(x, opd)
       case Def(Const(_)) => true
@@ -549,18 +549,16 @@ trait ArrayOpsExp extends ArrayOps with BaseExp { self: ScalanExp =>
 
    def firstOnlyExp(oldX: Exp[_], newX: Exp[_], exp: Exp[_]): Exp[_] = {
     exp match {
-      case Def(t: Tup[a, b]) => {
+      case Def(t: Tup[a, b]) =>
         implicit val eA = t.a.elem
         implicit val eB = t.b.elem
         Tup[a,b](firstOnlyExp(oldX, newX, t.a).asRep[a], firstOnlyExp(oldX, newX, t.b).asRep[b])
-      }
-      case Def(s: Second[a,b]) => {
+      case Def(s: Second[a,b]) =>
         val pair = s.pair
         implicit val eA = pair.elem.eFst
         implicit val eB = pair.elem.eSnd
         Second[a,b](firstOnlyExp(oldX, newX, pair).asRep[(a,b)])
-      }
-      case Def(f: First[a, b]) => {
+      case Def(f: First[a, b]) =>
         val pair = f.pair
         if (pair == oldX) {
           newX
@@ -569,7 +567,6 @@ trait ArrayOpsExp extends ArrayOps with BaseExp { self: ScalanExp =>
           implicit val eB = pair.elem.eSnd
           First[a, b](firstOnlyExp(oldX, newX, pair).asRep[(a, b)])
         }
-      }
       case Def(bin: ApplyBinOp[a,r]) =>
         ApplyBinOp[a,r](bin.op, firstOnlyExp(oldX, newX, bin.lhs).asRep[a], firstOnlyExp(oldX, newX, bin.rhs).asRep[a])
       case Def(un: ApplyUnOp[a, r]) =>
@@ -587,18 +584,16 @@ trait ArrayOpsExp extends ArrayOps with BaseExp { self: ScalanExp =>
 
   def secondOnlyExp(oldX: Exp[_], newX: Exp[_], exp: Exp[_]): Exp[_] = {
     exp match {
-      case Def(t: Tup[a, b]) => {
+      case Def(t: Tup[a, b]) =>
         implicit val eA = t.a.elem
         implicit val eB = t.b.elem
         Tup[a, b](secondOnlyExp(oldX, newX, t.a).asRep[a], secondOnlyExp(oldX, newX, t.b).asRep[b])
-      }
-      case Def(f: First[a, b]) => {
+      case Def(f: First[a, b]) =>
         val pair = f.pair
         implicit val eA = pair.elem.eFst
         implicit val eB = pair.elem.eSnd
         First[a, b](secondOnlyExp(oldX, newX, pair).asRep[(a, b)])
-      }
-      case Def(s: Second[a, b]) => {
+      case Def(s: Second[a, b]) =>
         val pair = s.pair
         if (pair == oldX) {
           newX
@@ -607,7 +602,6 @@ trait ArrayOpsExp extends ArrayOps with BaseExp { self: ScalanExp =>
           implicit val eB = pair.elem.eSnd
           Second[a, b](secondOnlyExp(oldX, newX, pair).asRep[(a, b)])
         }
-      }
       case Def(bin: ApplyBinOp[a,r]) =>
         ApplyBinOp[a,r](bin.op, secondOnlyExp(oldX, newX, bin.lhs).asRep[a], secondOnlyExp(oldX, newX, bin.rhs).asRep[a])
       case Def(un: ApplyUnOp[a, r]) =>

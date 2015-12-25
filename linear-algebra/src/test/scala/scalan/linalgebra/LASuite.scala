@@ -15,7 +15,7 @@ class LASuite extends BaseShouldTests {
   lazy val vector1 = Array((0, 1.0), (1, 2.0), (2, 3.0), (3, 4.0), (4, 5.0))
   lazy val vector2 = Array((0, 1.0), (2, 3.0), (3, 4.0))
 
-  class Seq extends MatricesDslSeq with LinearAlgebraExamples {}
+  class Seq extends LADslSeq with LinearAlgebraExamples {}
   val seq = new Seq
   import seq._
   lazy val v = toRep(3.0)

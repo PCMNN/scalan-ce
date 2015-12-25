@@ -10,7 +10,7 @@ import scalan.meta.ScalanAst._
 package impl {
 // Abs -----------------------------------
 trait VectorsAbs extends scalan.ScalanDsl with Vectors {
-  self: VectorsDsl =>
+  self: LADsl =>
 
   // single proxy for each type family
   implicit def proxyAbstractVector[T](p: Rep[AbstractVector[T]]): AbstractVector[T] = {
@@ -576,7 +576,7 @@ trait VectorsAbs extends scalan.ScalanDsl with Vectors {
 
 // Seq -----------------------------------
 trait VectorsSeq extends scalan.ScalanDslStd with VectorsDsl {
-  self: VectorsDslSeq =>
+  self: LADslSeq =>
   lazy val AbstractVector: Rep[AbstractVectorCompanionAbs] = new AbstractVectorCompanionAbs {
   }
 
@@ -667,7 +667,7 @@ trait VectorsSeq extends scalan.ScalanDslStd with VectorsDsl {
 
 // Exp -----------------------------------
 trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
-  self: VectorsDslExp =>
+  self: LADslExp =>
   lazy val AbstractVector: Rep[AbstractVectorCompanionAbs] = new AbstractVectorCompanionAbs {
   }
 
@@ -832,6 +832,18 @@ trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
       }
     }
 
+    object * {
+      def unapply(d: Def[_]): Option[(Rep[DenseVector[T]], Matrix[T], Numeric[T]) forSome {type T}] = d match {
+        case MethodCall(receiver, method, Seq(matrix, n, _*), _) if receiver.elem.isInstanceOf[DenseVectorElem[_]] && method.getName == "$times" =>
+          Some((receiver, matrix, n)).asInstanceOf[Option[(Rep[DenseVector[T]], Matrix[T], Numeric[T]) forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[(Rep[DenseVector[T]], Matrix[T], Numeric[T]) forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+
     object pow_^ {
       def unapply(d: Def[_]): Option[(Rep[DenseVector[T]], DoubleRep, Numeric[T]) forSome {type T}] = d match {
         case MethodCall(receiver, method, Seq(order, n, _*), _) if receiver.elem.isInstanceOf[DenseVectorElem[_]] && method.getName == "pow_$up" =>
@@ -839,6 +851,18 @@ trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
         case _ => None
       }
       def unapply(exp: Exp[_]): Option[(Rep[DenseVector[T]], DoubleRep, Numeric[T]) forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+
+    object sum {
+      def unapply(d: Def[_]): Option[(Rep[DenseVector[T]], Numeric[T]) forSome {type T}] = d match {
+        case MethodCall(receiver, method, Seq(n, _*), _) if receiver.elem.isInstanceOf[DenseVectorElem[_]] && method.getName == "sum" =>
+          Some((receiver, n)).asInstanceOf[Option[(Rep[DenseVector[T]], Numeric[T]) forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[(Rep[DenseVector[T]], Numeric[T]) forSome {type T}] = exp match {
         case Def(d) => unapply(d)
         case _ => None
       }
@@ -1054,6 +1078,18 @@ trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
       }
     }
 
+    object * {
+      def unapply(d: Def[_]): Option[(Rep[ConstVector[T]], Matrix[T], Numeric[T]) forSome {type T}] = d match {
+        case MethodCall(receiver, method, Seq(matrix, n, _*), _) if receiver.elem.isInstanceOf[ConstVectorElem[_]] && method.getName == "$times" =>
+          Some((receiver, matrix, n)).asInstanceOf[Option[(Rep[ConstVector[T]], Matrix[T], Numeric[T]) forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[(Rep[ConstVector[T]], Matrix[T], Numeric[T]) forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+
     object pow_^ {
       def unapply(d: Def[_]): Option[(Rep[ConstVector[T]], DoubleRep, Numeric[T]) forSome {type T}] = d match {
         case MethodCall(receiver, method, Seq(order, n, _*), _) if receiver.elem.isInstanceOf[ConstVectorElem[_]] && method.getName == "pow_$up" =>
@@ -1061,6 +1097,18 @@ trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
         case _ => None
       }
       def unapply(exp: Exp[_]): Option[(Rep[ConstVector[T]], DoubleRep, Numeric[T]) forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+
+    object sum {
+      def unapply(d: Def[_]): Option[(Rep[ConstVector[T]], Numeric[T]) forSome {type T}] = d match {
+        case MethodCall(receiver, method, Seq(n, _*), _) if receiver.elem.isInstanceOf[ConstVectorElem[_]] && method.getName == "sum" =>
+          Some((receiver, n)).asInstanceOf[Option[(Rep[ConstVector[T]], Numeric[T]) forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[(Rep[ConstVector[T]], Numeric[T]) forSome {type T}] = exp match {
         case Def(d) => unapply(d)
         case _ => None
       }
@@ -1264,6 +1312,18 @@ trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
       }
     }
 
+    object * {
+      def unapply(d: Def[_]): Option[(Rep[SparseVector[T]], Matrix[T], Numeric[T]) forSome {type T}] = d match {
+        case MethodCall(receiver, method, Seq(matrix, n, _*), _) if receiver.elem.isInstanceOf[SparseVectorElem[_]] && method.getName == "$times" =>
+          Some((receiver, matrix, n)).asInstanceOf[Option[(Rep[SparseVector[T]], Matrix[T], Numeric[T]) forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[(Rep[SparseVector[T]], Matrix[T], Numeric[T]) forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+
     object pow_^ {
       def unapply(d: Def[_]): Option[(Rep[SparseVector[T]], DoubleRep, Numeric[T]) forSome {type T}] = d match {
         case MethodCall(receiver, method, Seq(order, n, _*), _) if receiver.elem.isInstanceOf[SparseVectorElem[_]] && method.getName == "pow_$up" =>
@@ -1271,6 +1331,18 @@ trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
         case _ => None
       }
       def unapply(exp: Exp[_]): Option[(Rep[SparseVector[T]], DoubleRep, Numeric[T]) forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+
+    object sum {
+      def unapply(d: Def[_]): Option[(Rep[SparseVector[T]], Numeric[T]) forSome {type T}] = d match {
+        case MethodCall(receiver, method, Seq(n, _*), _) if receiver.elem.isInstanceOf[SparseVectorElem[_]] && method.getName == "sum" =>
+          Some((receiver, n)).asInstanceOf[Option[(Rep[SparseVector[T]], Numeric[T]) forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[(Rep[SparseVector[T]], Numeric[T]) forSome {type T}] = exp match {
         case Def(d) => unapply(d)
         case _ => None
       }
@@ -1510,6 +1582,18 @@ trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
       }
     }
 
+    object * {
+      def unapply(d: Def[_]): Option[(Rep[SparseVectorBoxed[T]], Matrix[T], Numeric[T]) forSome {type T}] = d match {
+        case MethodCall(receiver, method, Seq(matrix, n, _*), _) if receiver.elem.isInstanceOf[SparseVectorBoxedElem[_]] && method.getName == "$times" =>
+          Some((receiver, matrix, n)).asInstanceOf[Option[(Rep[SparseVectorBoxed[T]], Matrix[T], Numeric[T]) forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[(Rep[SparseVectorBoxed[T]], Matrix[T], Numeric[T]) forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+
     object pow_^ {
       def unapply(d: Def[_]): Option[(Rep[SparseVectorBoxed[T]], DoubleRep, Numeric[T]) forSome {type T}] = d match {
         case MethodCall(receiver, method, Seq(order, n, _*), _) if receiver.elem.isInstanceOf[SparseVectorBoxedElem[_]] && method.getName == "pow_$up" =>
@@ -1517,6 +1601,18 @@ trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
         case _ => None
       }
       def unapply(exp: Exp[_]): Option[(Rep[SparseVectorBoxed[T]], DoubleRep, Numeric[T]) forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+
+    object sum {
+      def unapply(d: Def[_]): Option[(Rep[SparseVectorBoxed[T]], Numeric[T]) forSome {type T}] = d match {
+        case MethodCall(receiver, method, Seq(n, _*), _) if receiver.elem.isInstanceOf[SparseVectorBoxedElem[_]] && method.getName == "sum" =>
+          Some((receiver, n)).asInstanceOf[Option[(Rep[SparseVectorBoxed[T]], Numeric[T]) forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[(Rep[SparseVectorBoxed[T]], Numeric[T]) forSome {type T}] = exp match {
         case Def(d) => unapply(d)
         case _ => None
       }
@@ -1732,6 +1828,18 @@ trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
       }
     }
 
+    object * {
+      def unapply(d: Def[_]): Option[(Rep[ShiftVector[T]], Matrix[T], Numeric[T]) forSome {type T}] = d match {
+        case MethodCall(receiver, method, Seq(matrix, n, _*), _) if receiver.elem.isInstanceOf[ShiftVectorElem[_]] && method.getName == "$times" =>
+          Some((receiver, matrix, n)).asInstanceOf[Option[(Rep[ShiftVector[T]], Matrix[T], Numeric[T]) forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[(Rep[ShiftVector[T]], Matrix[T], Numeric[T]) forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+
     object pow_^ {
       def unapply(d: Def[_]): Option[(Rep[ShiftVector[T]], DoubleRep, Numeric[T]) forSome {type T}] = d match {
         case MethodCall(receiver, method, Seq(order, n, _*), _) if receiver.elem.isInstanceOf[ShiftVectorElem[_]] && method.getName == "pow_$up" =>
@@ -1739,6 +1847,18 @@ trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
         case _ => None
       }
       def unapply(exp: Exp[_]): Option[(Rep[ShiftVector[T]], DoubleRep, Numeric[T]) forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+
+    object sum {
+      def unapply(d: Def[_]): Option[(Rep[ShiftVector[T]], Numeric[T]) forSome {type T}] = d match {
+        case MethodCall(receiver, method, Seq(n, _*), _) if receiver.elem.isInstanceOf[ShiftVectorElem[_]] && method.getName == "sum" =>
+          Some((receiver, n)).asInstanceOf[Option[(Rep[ShiftVector[T]], Numeric[T]) forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[(Rep[ShiftVector[T]], Numeric[T]) forSome {type T}] = exp match {
         case Def(d) => unapply(d)
         case _ => None
       }
@@ -1916,6 +2036,18 @@ trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
       }
     }
 
+    object * {
+      def unapply(d: Def[_]): Option[(Rep[ShiftVectorBoxed[T]], Matrix[T], Numeric[T]) forSome {type T}] = d match {
+        case MethodCall(receiver, method, Seq(matrix, n, _*), _) if receiver.elem.isInstanceOf[ShiftVectorBoxedElem[_]] && method.getName == "$times" =>
+          Some((receiver, matrix, n)).asInstanceOf[Option[(Rep[ShiftVectorBoxed[T]], Matrix[T], Numeric[T]) forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[(Rep[ShiftVectorBoxed[T]], Matrix[T], Numeric[T]) forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+
     object pow_^ {
       def unapply(d: Def[_]): Option[(Rep[ShiftVectorBoxed[T]], DoubleRep, Numeric[T]) forSome {type T}] = d match {
         case MethodCall(receiver, method, Seq(order, n, _*), _) if receiver.elem.isInstanceOf[ShiftVectorBoxedElem[_]] && method.getName == "pow_$up" =>
@@ -1923,6 +2055,18 @@ trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
         case _ => None
       }
       def unapply(exp: Exp[_]): Option[(Rep[ShiftVectorBoxed[T]], DoubleRep, Numeric[T]) forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+
+    object sum {
+      def unapply(d: Def[_]): Option[(Rep[ShiftVectorBoxed[T]], Numeric[T]) forSome {type T}] = d match {
+        case MethodCall(receiver, method, Seq(n, _*), _) if receiver.elem.isInstanceOf[ShiftVectorBoxedElem[_]] && method.getName == "sum" =>
+          Some((receiver, n)).asInstanceOf[Option[(Rep[ShiftVectorBoxed[T]], Numeric[T]) forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[(Rep[ShiftVectorBoxed[T]], Numeric[T]) forSome {type T}] = exp match {
         case Def(d) => unapply(d)
         case _ => None
       }
@@ -2228,6 +2372,18 @@ trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
       }
     }
 
+    object * {
+      def unapply(d: Def[_]): Option[(Rep[AbstractVector[T]], Matrix[T], Numeric[T]) forSome {type T}] = d match {
+        case MethodCall(receiver, method, Seq(matrix, n, _*), _) if receiver.elem.isInstanceOf[AbstractVectorElem[_, _]] && method.getName == "$times" =>
+          Some((receiver, matrix, n)).asInstanceOf[Option[(Rep[AbstractVector[T]], Matrix[T], Numeric[T]) forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[(Rep[AbstractVector[T]], Matrix[T], Numeric[T]) forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+
     object pow_^ {
       def unapply(d: Def[_]): Option[(Rep[AbstractVector[T]], Rep[Double], Numeric[T]) forSome {type T}] = d match {
         case MethodCall(receiver, method, Seq(order, n, _*), _) if receiver.elem.isInstanceOf[AbstractVectorElem[_, _]] && method.getName == "pow_$up" =>
@@ -2244,6 +2400,18 @@ trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
       def unapply(d: Def[_]): Option[(Rep[AbstractVector[T]], Numeric[T]) forSome {type T}] = d match {
         case MethodCall(receiver, method, Seq(num, _*), _) if receiver.elem.isInstanceOf[AbstractVectorElem[_, _]] && method.getName == "euclideanNorm" =>
           Some((receiver, num)).asInstanceOf[Option[(Rep[AbstractVector[T]], Numeric[T]) forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[(Rep[AbstractVector[T]], Numeric[T]) forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+
+    object sum {
+      def unapply(d: Def[_]): Option[(Rep[AbstractVector[T]], Numeric[T]) forSome {type T}] = d match {
+        case MethodCall(receiver, method, Seq(n, _*), _) if receiver.elem.isInstanceOf[AbstractVectorElem[_, _]] && method.getName == "sum" =>
+          Some((receiver, n)).asInstanceOf[Option[(Rep[AbstractVector[T]], Numeric[T]) forSome {type T}]]
         case _ => None
       }
       def unapply(exp: Exp[_]): Option[(Rep[AbstractVector[T]], Numeric[T]) forSome {type T}] = exp match {
@@ -2317,7 +2485,7 @@ trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
 }
 
 object Vectors_Module extends scalan.ModuleInfo {
-  val dump = "H4sIAAAAAAAAAN1YTWwbRRSedWI7tkOalgZKRUQIhgoEcYJAPQSpSp0EgkwSZUOFTFU0tsfOltnZzc44sjlUnCoEN8QViUpcEL0gTqhShYSQEAdOCCFx5lSKqh6oOIB4M/vj9c86iUmjgA+j3dl5b9583zfvzfj6bRTnDnqKlzHFbMYkAs/o6nmBi6y+xIQhmq9ZlToli6R6yvr6k7nPTn8VQ8eKKLGF+SKnRZRyH5YadvCsk+0CSmFWJlxYDhfo8YKaIVe2KCVlYVgsZ5hmXeASJbmCwcV8AQ2XrEpzG11BWgGNly1Wdoggep5izgn3+keIjMgI3lPqvblmt+ZgObmKXGgVmw42BIQPc4y74zeIrTeZxZqmQGNeaGu2DAvGJA3TthzhT5EEd1tWxX8dZhg60InCZbyDczBFLacLx2A1sMzYuPw2rpFVGCKHD0PAnNDqZtNW70MFlOZkGwBaMW2qeho2QggYeF4FMdPCZybAZ0bik9WJY2BqvIPlx3XHajSR+9OGEGrY4OLZXVz4HsgSq2Tfv1h+856eMWPSuCFDSaoVJsDRYxFqUFQAjt9tfMjvvnztbAyliyht8IUSFw4uizDlHloZzJglVMwBgNipAVvTUWypWRZgTIckUmXLtDEDTx6Uo8ATNcqGkINl36jHTgT0SWETf6jWsLVgvVMR61W6yWNK12898tyTvy29EUOx9ilS4FIH4Tu+U5CTj8YFIMEDIqHaYwJpmwpp2aQarTbZJ4gAjjO3fq98O4suxgIQvTn3xhu4iPOff8r8+PS5GBopKpUvU1wrAo58iRJzzclbTBTRiLVDHPdLcgdT+dSTx2SFVHGdCg/dMCxDAItAU5H70SYSs3mlfc0HIOPKd9ViJLu8nv1D//6j61KdDhp1v7gb9G/j7F+/jFWFEq5AcUMQk/v4DudB/HuGPO361S2THJ++a1y69oFQ4GqN9v29VroMXM4ru0f74OznmS+uXp248+lbD6r9MVIyhInt7Ow+docv5vuoftSO0ljey7dKK3PtHzOLhHHi6jkCTNlOBN9UMwnsnAxZ5sMLmAyZhSY7pfmCUIMEipHNgFsp0l257Y52Mtgfk1G8KWQe2iicpLfP3Yyh+KsoXgXZ8wKKl6w6q/iQQ1ESpCHO+31aO+QAMXawGUCsflOotd6OiNXAjNbBxED5owtI1AEk6IdxsSI8CMHXEBTBPt57u0lQwmpiy7dIrDABbjqCcsPJqvbMvoSWl0EOJLSQ5aEJrSPayZDNS0eK/DE46hSJY62wigEZqFe2dNAT0btj3TFMOHXtkBe/ufH6nZurcVUIT3gF4AKmdeKegbyN0NoUMkVrsyA2EEo/XT3gRah87Tmd9/Ilm/X7pM9RHTb4YJlwImx6WArtivfoSnTUl2hUOe9Tdm2yWbcpeeHGn5fee/cVW9XwrpOZ60Y2zT7RHraijocZOm81SGV/sjrdZX9Y2uod+dEV2O45UGkjWgYHmaQOqB7vRZktVg68/ulbRvU/Uf92TS6y/XzwDPG/oHM8ROeA+zm0tETPXDgEt6N/z3hETuyTgzPyIrSMTYM25/rO309hrZkUAJB9H2437pF6u/8QGBRVaLWp1hhvYNKDDfKxVx2pwTCtkZKDPTwcNB1ROHXvhgikXLn38eozP3z5qzrYpeVdE67hLPgPLHyga8cv7QWwyGkoZFCdvH6qcP8BGhu8MmMUAAA="
+  val dump = "H4sIAAAAAAAAAN1YTWwbRRSetWM7jkOalgZKRUQIhgoEcYJAPQSpSp0EgkwSZUOFTFU0tsfOltnZzc44sjlUnCoEN8QViUpcEL0gTqhShYSQEAdOCCFx5lSKqh6oOIB4M/vj9c86iUmjgA+j3dl5b9583zfvzfj6bZTgDnqKlzHFbMYkAs/o6nmBi6y+xIQhmq9ZlToli6R6yvr6k7nPTn8VQ8eKKLmF+SKnRZR2H5YadvCsk+0CSmNWJlxYDhfo8YKaIVe2KCVlYVgsZ5hmXeASJbmCwcV8AQ2VrEpzG11BWgGNly1Wdoggep5izgn3+oeJjMgI3tPqvblmt+ZgObmKXGgVmw42BIQPc4y74zeIrTeZxZqmQGNeaGu2DAvGpAzTthzhT5ECd1tWxX8dYhg60InCZbyDczBFLacLx2A1sMzYuPw2rpFVGCKHD0HAnNDqZtNW7/ECGuFkGwBaMW2qeho2QggYeF4FMdPCZybAZ0bik9WJY2BqvIPlx3XHajSR+9PiCDVscPHsLi58D2SJVbLvXyy/eU/PmDFp3JChpNQKk+DosQg1KCoAx+82PuR3X752NoZGimjE4AslLhxcFmHKPbQymDFLqJgDALFTA7amo9hSsyzAmA5JpMuWaWMGnjwoR4EnapQNIQfLvlGPnQjoU8Im/lCtYWvBeqci1qt0k8eUrt965Lknf1t6I4Zi7VOkwaUOwnd8pyAnH40LQIIHRFK1xwTSNhXSskk3Wm2qTxABHGdu/V75dhZdjAUgenPujTdwkeA//5T58elzMTRcVCpfprhWBBz5EiXmmpO3mCiiYWuHOO6X1A6m8qknj6kKqeI6FR66YVjiAItAU5H70SYSs3mlfc0HIOPKd9ViJLu8nv1D//6j61KdDhp1v7gb9G/j7F+/jFWFEq5ACUMQk/v4DuVB/HuGfMT1q1smOT5917h07QOhwNUa7ft7rXQZuJxXdo/2wdnPM19cvTpx59O3HlT7Y7hkCBPb2dl97A5fzPdR/agdpbG8l2+VVubaP2YWCePE1XMEmLKdCL6pZhLYORmyzIcXMBkyC012SvMFoQYJFCObAbdSpLty2x3tZLA/JqN4U8g8tFE4SW+fuxlDiVdRogqy5wWUKFl1VvEhh6IkSEOc9/u0dsgBYuxgM4BY/aZQa70dEauBGa2DiYHyRxeQqANI0A/jYkV4EIKvOBTBPt57u0lSwmpiy7dIrjABbjqCcsPJqvbMvoSWl0EOJLSQ5aEJrSPayZDNS0eK/DE46hSJY62wigEZqFe2dNAT0btj3TFMOHXtkBe/ufH6nZurCVUIT3gF4AKmdeKegbyN0NoUMkVrsyA2EEo/XT3gRah87Tmd9/Ilm/X7pM9RHTb4YJlwImx6WArtivfoSnTUl2hUOe9Tdm2yWbcpeeHGn5fee/cVW9XwrpOZ60Y2zT7RHraijocZOm81SGV/sjrdZX9Y2uod+dEV2O45UGkjWgYHmaQOqB7vRZktVg68/ulbRvU/Uf92TS6y/XzwDPG/oHM8ROeA+zm0tGTPXBiH29G/ZzwiJ/bJwRl5EVrGpkGbc33n76ew1kwKAMi+D7cb90i93X8IDIoqtNpUa4w3MOXBBvnYq47UYJjWSMnBHh4Omo4onLp3QwRSrtz7ePWZH778VR3sRuRdE67hLPgPLHyga8cvUVhY5DQULQhO3jxVpP8AlQwsil4UAAA="
 }
 }
 

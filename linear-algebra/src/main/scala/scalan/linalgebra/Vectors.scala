@@ -9,7 +9,7 @@ import scalan.collections.{CollectionsDsl, CollectionsDslSeq, CollectionsDslExp}
 import scalan.common.OverloadHack.{Overloaded2, Overloaded1}
 import scala.annotation.unchecked.uncheckedVariance
 
-trait Vectors { self: VectorsDsl =>
+trait Vectors { self: LADsl =>
 
   type Vector[T] = Rep[AbstractVector[T]]
 
@@ -55,10 +55,13 @@ trait Vectors { self: VectorsDsl =>
     @OverloadId("elementwise_div_value")
     def /^(value: Rep[T])(implicit f: Fractional[T], o: Overloaded2): Vector[T] = self /^ ConstVector(value, length)
 
+    def *(matrix: Matrix[T])(implicit n: Numeric[T]): Vector[T]
+
     def pow_^(order: Rep[Double])(implicit n: Numeric[T], o: Overloaded2): Vector[T]
 
     def euclideanNorm(implicit num: Numeric[T]): DoubleRep
 
+    def sum(implicit n: Numeric[T]): Rep[T]
     def reduce(implicit m: RepMonoid[T]): Rep[T]
     def dot(vector: Vector[T])(implicit n: Numeric[T]): Rep[T]
 
@@ -155,12 +158,25 @@ trait Vectors { self: VectorsDsl =>
         case _ => (self *^ vector).reduce
       }
     }
+    def *(matrix: Matrix[T])(implicit n: Numeric[T]): Vector[T] = {
+      def mV = CompoundMatrix(items.map(v => ConstVector(v, length)), matrix.numRows)
+      def standart = (matrix *^^ mV).sumByColumns
+      matrix match {
+        case DenseFlatMatrixMatcher(_, _) => standart
+        case CompoundMatrixMatcher(_, _) => standart
+        case ConstMatrixMatcher(value, _, _) => ConstVector(sum * value, length)
+        case DiagonalMatrixMatcher(diagonalValues) => self *^ DenseVector(diagonalValues)
+        case ConstDiagonalMatrixMatcher(diagonalValue, _) => self *^ diagonalValue
+        case _ => !!!("matcher for @matrix argument in DenseFlatMatrix.*(matrix: Matrix[T]) is not specified.")
+      }
+    }
 
     def pow_^(order: DoubleRep)(implicit n: Numeric[T], o: Overloaded2): Vector[T] = {
       // TODO: match element[T]
       DenseVector(items.map(v => Math.pow(v.toDouble, order).asRep[T]))
     }
 
+    def sum(implicit n: Numeric[T]): Rep[T] = reduce
     def reduce(implicit m: RepMonoid[T]): Rep[T] = items.reduce(m)
 
     def euclideanNorm(implicit num: Numeric[T]): DoubleRep = Math.sqrt(items.map(v => v * v).reduce.toDouble)
@@ -243,10 +259,12 @@ trait Vectors { self: VectorsDsl =>
         case _ => vector dot self
       }
     }
+    def *(matrix: Matrix[T])(implicit n: Numeric[T]): Vector[T] = ???
 
     def pow_^(order: DoubleRep)(implicit n: Numeric[T], o: Overloaded2): Vector[T] = {
       ConstVector(Math.pow(constItem.toDouble, order).asRep[T], length)
     }
+    def sum(implicit n: Numeric[T]): Rep[T] = constItem * length.to[T]
     // TODO: need some monoid matching or optimization rule
     def reduce(implicit m: RepMonoid[T]): Rep[T] = items.reduce(m)
 
@@ -349,11 +367,13 @@ trait Vectors { self: VectorsDsl =>
         case _ => vector dot self
       }
     }
+    def *(matrix: Matrix[T])(implicit n: Numeric[T]): Vector[T] = ???
 
     def pow_^(order: DoubleRep)(implicit n: Numeric[T], o: Overloaded2): Vector[T] = {
       SparseVector(nonZeroIndices, nonZeroValues.map(v => Math.pow(v.toDouble, order).asRep[T]), length)
     }
 
+    def sum(implicit n: Numeric[T]): Rep[T] = nonZeroValues.reduce
     def reduce(implicit m: RepMonoid[T]): Rep[T] = {
       if (m.zero == zeroValue) nonZeroValues.reduce(m) else items.reduce(m)
     }  //TODO: it's inefficient
@@ -454,11 +474,13 @@ trait Vectors { self: VectorsDsl =>
         case _ => vector dot self
       }
     }
+    def *(matrix: Matrix[T])(implicit n: Numeric[T]): Vector[T] = ???
 
     def pow_^(order: DoubleRep)(implicit n: Numeric[T], o: Overloaded2): Vector[T] = {
       SparseVectorBoxed(nonZeroIndices zip nonZeroValues.map(v => Math.pow(v.toDouble, order).asRep[T]), length)
     }
 
+    def sum(implicit n: Numeric[T]): Rep[T] = nonZeroValues.reduce
     def reduce(implicit m: RepMonoid[T]): Rep[T] = items.reduce(m)  //TODO: it's inefficient
 
     def euclideanNorm(implicit num: Numeric[T]): DoubleRep = Math.sqrt(nonZeroValues.map(v => v * v).reduce.toDouble)
@@ -558,11 +580,13 @@ trait Vectors { self: VectorsDsl =>
         case _ => vector dot self
       }
     }
+    def *(matrix: Matrix[T])(implicit n: Numeric[T]): Vector[T] = ???
 
     def pow_^(order: DoubleRep)(implicit n: Numeric[T], o: Overloaded2): Vector[T] = {
       SparseVector(nonZeroIndices, nonZeroValues.map(v => Math.pow(v.toDouble, order).asRep[T]), length)
     }
 
+    def sum(implicit n: Numeric[T]): Rep[T] = nonZeroValues.reduce + constItem
     def reduce(implicit m: RepMonoid[T]): Rep[T] = {
       if (m.zero == zeroValue) nonZeroValues.reduce(m) else items.reduce(m)
     }  //TODO: it's inefficient
@@ -660,11 +684,13 @@ trait Vectors { self: VectorsDsl =>
         case _ => vector dot self
       }
     }
+    def *(matrix: Matrix[T])(implicit n: Numeric[T]): Vector[T] = ???
 
     def pow_^(order: DoubleRep)(implicit n: Numeric[T], o: Overloaded2): Vector[T] = {
       SparseVectorBoxed(nonZeroIndices zip nonZeroValues.map(v => Math.pow(v.toDouble, order).asRep[T]), length)
     }
 
+    def sum(implicit n: Numeric[T]): Rep[T] = ???
     def reduce(implicit m: RepMonoid[T]): Rep[T] = items.reduce(m)  //TODO: it's inefficient
 
     def euclideanNorm(implicit num: Numeric[T]): DoubleRep = Math.sqrt(nonZeroValues.map(v => v * v).reduce.toDouble)
@@ -723,7 +749,7 @@ trait Vectors { self: VectorsDsl =>
   }
 }
 
-trait VectorsDsl extends CollectionsDsl with impl.VectorsAbs {
+trait VectorsDsl extends CollectionsDsl with impl.VectorsAbs { self: LADsl =>
 
   type VectorCompanion = Rep[AbstractVectorCompanion]
 
@@ -754,7 +780,7 @@ trait VectorsDsl extends CollectionsDsl with impl.VectorsAbs {
   }
 }
 
-trait VectorsDslSeq extends CollectionsDslSeq with impl.VectorsSeq {
+trait VectorsDslSeq extends CollectionsDslSeq with impl.VectorsSeq { self: LADslSeq =>
 
   def dotSparse[T: Elem](xIndices: Coll[Int], xValues: Coll[T], yIndices: Coll[Int], yValues: Coll[T])
                         (implicit n: Numeric[T]): Rep[T] = {
@@ -789,7 +815,7 @@ trait VectorsDslSeq extends CollectionsDslSeq with impl.VectorsSeq {
   }
 }
 
-trait VectorsDslExp extends CollectionsDslExp with impl.VectorsExp {
+trait VectorsDslExp extends CollectionsDslExp with impl.VectorsExp { self: LADslExp =>
 
   def dotSparse[T: Elem](xIndices: Coll[Int], xValues: Coll[T], yIndices: Coll[Int], yValues: Coll[T])
                         (implicit n: Numeric[T]): Rep[T] = {
