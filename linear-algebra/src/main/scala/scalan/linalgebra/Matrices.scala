@@ -42,8 +42,8 @@ trait Matrices extends Vectors { self: LADsl =>
       DenseVector(rows.map(row => row.nonZeroValues.reduce))
     }
     def reduceByColumns(implicit m: RepMonoid[T], n: Numeric[T]): Vector[T]
-    def sumByRows(implicit m: RepMonoid[T]): Vector[T] = ???
-    def sumByColumns(implicit m: RepMonoid[T], n: Numeric[T]): Vector[T] = ???
+    def sumByRows(implicit n: Numeric[T]): Vector[T]
+    def sumByColumns(implicit n: Numeric[T]): Vector[T]
 
     def countNonZeroesByColumns(implicit n: Numeric[T]): Vector[Int] = {
       /*val zero = elem.defaultRepValue
@@ -108,6 +108,8 @@ trait Matrices extends Vectors { self: LADsl =>
     def reduceByColumns(implicit m: RepMonoid[T], n: Numeric[T]): Vector[T] = {
       DenseVector(Collection.indexRange(numColumns).map(column => rows.map(row => row(column)).reduce(m)))
     }
+    def sumByRows(implicit n: Numeric[T]): Vector[T] = ???
+    def sumByColumns(implicit n: Numeric[T]): Vector[T] = ???
 
     @OverloadId("matrix")
     def *(matrix: Matrix[T])(implicit n: Numeric[T], o: Overloaded1): Matrix[T] = {
@@ -310,6 +312,8 @@ trait Matrices extends Vectors { self: LADsl =>
       lazy val VectorMonoid = RepMonoid[SparseVector[T]]("Vector", zeroVector, true) { (t1, t2) => t1 +^ t2 }
       rows.reduce(VectorMonoid)*/
     }
+    def sumByRows(implicit n: Numeric[T]): Vector[T] = ???
+    def sumByColumns(implicit n: Numeric[T]): Vector[T] = ???
 
     @OverloadId("matrix")
     def *(matrix: Matrix[T])(implicit n: Numeric[T], o: Overloaded1): Matrix[T] = {
@@ -407,6 +411,8 @@ trait Matrices extends Vectors { self: LADsl =>
       val coll = Collection.replicate(numColumns, res)
       DenseVector(coll)
     }
+    def sumByRows(implicit n: Numeric[T]): Vector[T] = ???
+    def sumByColumns(implicit n: Numeric[T]): Vector[T] = ???
 
     override def countNonZeroesByColumns(implicit n: Numeric[T]): Vector[Int] = {
       ConstVector(IF (constItem !== zeroValue) THEN numRows ELSE toRep(0), numColumns)
@@ -499,6 +505,8 @@ trait Matrices extends Vectors { self: LADsl =>
 
     // TODO: inconsistent, no respect towards monoid operation over zero values, fix
     def reduceByColumns(implicit m: RepMonoid[T], n: Numeric[T]): Vector[T] = DenseVector(diagonalValues)
+    def sumByRows(implicit n: Numeric[T]): Vector[T] = ???
+    def sumByColumns(implicit n: Numeric[T]): Vector[T] = ???
 
     @OverloadId("matrix")
     def *(matrix: Matrix[T])(implicit n: Numeric[T], o: Overloaded1): Matrix[T] = {
@@ -578,6 +586,8 @@ trait Matrices extends Vectors { self: LADsl =>
     def transpose(implicit n: Numeric[T]): Matrix[T] = self
 
     def reduceByColumns(implicit m: RepMonoid[T], n: Numeric[T]): Vector[T] = ConstVector(constItem, numColumns)
+    def sumByRows(implicit n: Numeric[T]): Vector[T] = ???
+    def sumByColumns(implicit n: Numeric[T]): Vector[T] = ???
 
     @OverloadId("matrix")
     def *(matrix: Matrix[T])(implicit n: Numeric[T], o: Overloaded1): Matrix[T] = {
