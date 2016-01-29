@@ -54,7 +54,7 @@ trait VectorsAbs extends scalan.ScalanDsl with Vectors {
     protected def getDefaultRep = AbstractVector
   }
 
-  abstract class AbstractVectorCompanionAbs extends CompanionDef[AbstractVectorCompanionAbs] with AbstractVectorCompanion {
+  abstract class AbstractVectorCompanionAbs extends CompanionDef[AbstractVectorCompanionAbs] {
     def selfType = AbstractVectorCompanionElem
     override def toString = "AbstractVector"
   }
@@ -67,16 +67,16 @@ trait VectorsAbs extends scalan.ScalanDsl with Vectors {
     proxyOps[ConstantVector[T]](p)(scala.reflect.classTag[ConstantVector[T]])
   }
   // familyElem
-  class ConstantVectorElem[T, To <: ConstantVector[T]](implicit _eT: Elem[T])
+  class ConstantVectorElem[T, To <: ConstantVector[T]](implicit _eC: Elem[T])
     extends AbstractVectorElem[T, To] {
-    override def eT = _eT
+    def eC = _eC
     override lazy val parent: Option[Elem[_]] = Some(abstractVectorElement(element[T]))
     override lazy val tyArgSubst: Map[String, TypeDesc] = {
-      Map("T" -> Left(eT))
+      Map("T" -> Left(eC))
     }
     override def isEntityType = true
     override lazy val tag = {
-      implicit val tagT = eT.tag
+      implicit val tagT = eC.tag
       weakTypeTag[ConstantVector[T]].asInstanceOf[WeakTypeTag[To]]
     }
     override def convert(x: Rep[Def[_]]) = {
@@ -95,8 +95,8 @@ trait VectorsAbs extends scalan.ScalanDsl with Vectors {
     override def getDefaultRep: Rep[To] = ???
   }
 
-  implicit def constantVectorElement[T](implicit eT: Elem[T]): Elem[ConstantVector[T]] =
-    cachedElem[ConstantVectorElem[T, ConstantVector[T]]](eT)
+  implicit def constantVectorElement[T](implicit eC: Elem[T]): Elem[ConstantVector[T]] =
+    cachedElem[ConstantVectorElem[T, ConstantVector[T]]](eC)
 
   abstract class AbsDenseVector[T]
       (items: Coll[T])(implicit eT: Elem[T])
@@ -183,23 +183,23 @@ trait VectorsAbs extends scalan.ScalanDsl with Vectors {
   def unmkDenseVector[T](p: Rep[AbstractVector[T]]): Option[(Rep[Collection[T]])]
 
   abstract class AbsConstVector[T]
-      (const: Rep[T], length: IntRep)(implicit eT: Elem[T])
+      (const: Rep[T], length: IntRep)(implicit eC: Elem[T])
     extends ConstVector[T](const, length) with Def[ConstVector[T]] {
     lazy val selfType = element[ConstVector[T]]
   }
   // elem for concrete class
-  class ConstVectorElem[T](val iso: Iso[ConstVectorData[T], ConstVector[T]])(implicit override val eT: Elem[T])
+  class ConstVectorElem[T](val iso: Iso[ConstVectorData[T], ConstVector[T]])(implicit override val eC: Elem[T])
     extends ConstantVectorElem[T, ConstVector[T]]
     with ConcreteElem[ConstVectorData[T], ConstVector[T]] {
     override lazy val parent: Option[Elem[_]] = Some(constantVectorElement(element[T]))
     override lazy val tyArgSubst: Map[String, TypeDesc] = {
-      Map("T" -> Left(eT))
+      Map("T" -> Left(eC))
     }
 
     override def convertConstantVector(x: Rep[ConstantVector[T]]) = ConstVector(x.const, x.length)
     override def getDefaultRep = ConstVector(element[T].defaultRepValue, element[Int].defaultRepValue)
     override lazy val tag = {
-      implicit val tagT = eT.tag
+      implicit val tagT = eC.tag
       weakTypeTag[ConstVector[T]]
     }
   }
@@ -208,7 +208,7 @@ trait VectorsAbs extends scalan.ScalanDsl with Vectors {
   type ConstVectorData[T] = (T, Int)
 
   // 3) Iso for concrete class
-  class ConstVectorIso[T](implicit eT: Elem[T])
+  class ConstVectorIso[T](implicit eC: Elem[T])
     extends EntityIso[ConstVectorData[T], ConstVector[T]] with Def[ConstVectorIso[T]] {
     override def from(p: Rep[ConstVector[T]]) =
       (p.const, p.length)
@@ -218,15 +218,15 @@ trait VectorsAbs extends scalan.ScalanDsl with Vectors {
     }
     lazy val eFrom = pairElement(element[T], element[Int])
     lazy val eTo = new ConstVectorElem[T](self)
-    lazy val selfType = new ConstVectorIsoElem[T](eT)
+    lazy val selfType = new ConstVectorIsoElem[T](eC)
     def productArity = 1
-    def productElement(n: Int) = eT
+    def productElement(n: Int) = eC
   }
-  case class ConstVectorIsoElem[T](eT: Elem[T]) extends Elem[ConstVectorIso[T]] {
+  case class ConstVectorIsoElem[T](eC: Elem[T]) extends Elem[ConstVectorIso[T]] {
     def isEntityType = true
-    def getDefaultRep = reifyObject(new ConstVectorIso[T]()(eT))
+    def getDefaultRep = reifyObject(new ConstVectorIso[T]()(eC))
     lazy val tag = {
-      implicit val tagT = eT.tag
+      implicit val tagT = eC.tag
       weakTypeTag[ConstVectorIso[T]]
     }
   }
@@ -234,12 +234,12 @@ trait VectorsAbs extends scalan.ScalanDsl with Vectors {
   class ConstVectorCompanionAbs extends CompanionDef[ConstVectorCompanionAbs] with ConstVectorCompanion {
     def selfType = ConstVectorCompanionElem
     override def toString = "ConstVector"
-    def apply[T](p: Rep[ConstVectorData[T]])(implicit eT: Elem[T]): Rep[ConstVector[T]] =
-      isoConstVector(eT).to(p)
-    def apply[T](const: Rep[T], length: IntRep)(implicit eT: Elem[T]): Rep[ConstVector[T]] =
+    def apply[T](p: Rep[ConstVectorData[T]])(implicit eC: Elem[T]): Rep[ConstVector[T]] =
+      isoConstVector(eC).to(p)
+    def apply[T](const: Rep[T], length: IntRep)(implicit eC: Elem[T]): Rep[ConstVector[T]] =
       mkConstVector(const, length)
 
-    def unapply[T](p: Rep[ConstantVector[T]]) = unmkConstVector(p)
+    def unapply[T](p: Rep[AbstractVector[T]]) = unmkConstVector(p)
   }
   lazy val ConstVectorRep: Rep[ConstVectorCompanionAbs] = new ConstVectorCompanionAbs
   lazy val ConstVector: ConstVectorCompanionAbs = proxyConstVectorCompanion(ConstVectorRep)
@@ -255,36 +255,36 @@ trait VectorsAbs extends scalan.ScalanDsl with Vectors {
   implicit def proxyConstVector[T](p: Rep[ConstVector[T]]): ConstVector[T] =
     proxyOps[ConstVector[T]](p)
 
-  implicit class ExtendedConstVector[T](p: Rep[ConstVector[T]])(implicit eT: Elem[T]) {
-    def toData: Rep[ConstVectorData[T]] = isoConstVector(eT).from(p)
+  implicit class ExtendedConstVector[T](p: Rep[ConstVector[T]])(implicit eC: Elem[T]) {
+    def toData: Rep[ConstVectorData[T]] = isoConstVector(eC).from(p)
   }
 
   // 5) implicit resolution of Iso
-  implicit def isoConstVector[T](implicit eT: Elem[T]): Iso[ConstVectorData[T], ConstVector[T]] =
-    reifyObject(new ConstVectorIso[T]()(eT))
+  implicit def isoConstVector[T](implicit eC: Elem[T]): Iso[ConstVectorData[T], ConstVector[T]] =
+    reifyObject(new ConstVectorIso[T]()(eC))
 
   // 6) smart constructor and deconstructor
-  def mkConstVector[T](const: Rep[T], length: IntRep)(implicit eT: Elem[T]): Rep[ConstVector[T]]
-  def unmkConstVector[T](p: Rep[ConstantVector[T]]): Option[(Rep[T], Rep[Int])]
+  def mkConstVector[T](const: Rep[T], length: IntRep)(implicit eC: Elem[T]): Rep[ConstVector[T]]
+  def unmkConstVector[T](p: Rep[AbstractVector[T]]): Option[(Rep[T], Rep[Int])]
 
   abstract class AbsZeroVector[T]
-      (length: IntRep)(implicit eT: Elem[T])
+      (length: IntRep)(implicit eC: Elem[T])
     extends ZeroVector[T](length) with Def[ZeroVector[T]] {
     lazy val selfType = element[ZeroVector[T]]
   }
   // elem for concrete class
-  class ZeroVectorElem[T](val iso: Iso[ZeroVectorData[T], ZeroVector[T]])(implicit override val eT: Elem[T])
+  class ZeroVectorElem[T](val iso: Iso[ZeroVectorData[T], ZeroVector[T]])(implicit override val eC: Elem[T])
     extends ConstantVectorElem[T, ZeroVector[T]]
     with ConcreteElem[ZeroVectorData[T], ZeroVector[T]] {
     override lazy val parent: Option[Elem[_]] = Some(constantVectorElement(element[T]))
     override lazy val tyArgSubst: Map[String, TypeDesc] = {
-      Map("T" -> Left(eT))
+      Map("T" -> Left(eC))
     }
 
     override def convertConstantVector(x: Rep[ConstantVector[T]]) = ZeroVector(x.length)
     override def getDefaultRep = ZeroVector(element[Int].defaultRepValue)
     override lazy val tag = {
-      implicit val tagT = eT.tag
+      implicit val tagT = eC.tag
       weakTypeTag[ZeroVector[T]]
     }
   }
@@ -293,7 +293,7 @@ trait VectorsAbs extends scalan.ScalanDsl with Vectors {
   type ZeroVectorData[T] = Int
 
   // 3) Iso for concrete class
-  class ZeroVectorIso[T](implicit eT: Elem[T])
+  class ZeroVectorIso[T](implicit eC: Elem[T])
     extends EntityIso[ZeroVectorData[T], ZeroVector[T]] with Def[ZeroVectorIso[T]] {
     override def from(p: Rep[ZeroVector[T]]) =
       p.length
@@ -303,27 +303,27 @@ trait VectorsAbs extends scalan.ScalanDsl with Vectors {
     }
     lazy val eFrom = element[Int]
     lazy val eTo = new ZeroVectorElem[T](self)
-    lazy val selfType = new ZeroVectorIsoElem[T](eT)
+    lazy val selfType = new ZeroVectorIsoElem[T](eC)
     def productArity = 1
-    def productElement(n: Int) = eT
+    def productElement(n: Int) = eC
   }
-  case class ZeroVectorIsoElem[T](eT: Elem[T]) extends Elem[ZeroVectorIso[T]] {
+  case class ZeroVectorIsoElem[T](eC: Elem[T]) extends Elem[ZeroVectorIso[T]] {
     def isEntityType = true
-    def getDefaultRep = reifyObject(new ZeroVectorIso[T]()(eT))
+    def getDefaultRep = reifyObject(new ZeroVectorIso[T]()(eC))
     lazy val tag = {
-      implicit val tagT = eT.tag
+      implicit val tagT = eC.tag
       weakTypeTag[ZeroVectorIso[T]]
     }
   }
   // 4) constructor and deconstructor
-  class ZeroVectorCompanionAbs extends CompanionDef[ZeroVectorCompanionAbs] {
+  class ZeroVectorCompanionAbs extends CompanionDef[ZeroVectorCompanionAbs] with ZeroVectorCompanion {
     def selfType = ZeroVectorCompanionElem
     override def toString = "ZeroVector"
 
-    def apply[T](length: IntRep)(implicit eT: Elem[T]): Rep[ZeroVector[T]] =
+    def apply[T](length: IntRep)(implicit eC: Elem[T]): Rep[ZeroVector[T]] =
       mkZeroVector(length)
 
-    def unapply[T](p: Rep[ConstantVector[T]]) = unmkZeroVector(p)
+    def unapply[T](p: Rep[AbstractVector[T]]) = unmkZeroVector(p)
   }
   lazy val ZeroVectorRep: Rep[ZeroVectorCompanionAbs] = new ZeroVectorCompanionAbs
   lazy val ZeroVector: ZeroVectorCompanionAbs = proxyZeroVectorCompanion(ZeroVectorRep)
@@ -339,17 +339,17 @@ trait VectorsAbs extends scalan.ScalanDsl with Vectors {
   implicit def proxyZeroVector[T](p: Rep[ZeroVector[T]]): ZeroVector[T] =
     proxyOps[ZeroVector[T]](p)
 
-  implicit class ExtendedZeroVector[T](p: Rep[ZeroVector[T]])(implicit eT: Elem[T]) {
-    def toData: Rep[ZeroVectorData[T]] = isoZeroVector(eT).from(p)
+  implicit class ExtendedZeroVector[T](p: Rep[ZeroVector[T]])(implicit eC: Elem[T]) {
+    def toData: Rep[ZeroVectorData[T]] = isoZeroVector(eC).from(p)
   }
 
   // 5) implicit resolution of Iso
-  implicit def isoZeroVector[T](implicit eT: Elem[T]): Iso[ZeroVectorData[T], ZeroVector[T]] =
-    reifyObject(new ZeroVectorIso[T]()(eT))
+  implicit def isoZeroVector[T](implicit eC: Elem[T]): Iso[ZeroVectorData[T], ZeroVector[T]] =
+    reifyObject(new ZeroVectorIso[T]()(eC))
 
   // 6) smart constructor and deconstructor
-  def mkZeroVector[T](length: IntRep)(implicit eT: Elem[T]): Rep[ZeroVector[T]]
-  def unmkZeroVector[T](p: Rep[ConstantVector[T]]): Option[(Rep[Int])]
+  def mkZeroVector[T](length: IntRep)(implicit eC: Elem[T]): Rep[ZeroVector[T]]
+  def unmkZeroVector[T](p: Rep[AbstractVector[T]]): Option[(Rep[Int])]
 
   abstract class AbsSparseVector[T]
       (nonZeroIndices: Coll[Int], nonZeroValues: Coll[T], length: IntRep)(implicit eT: Elem[T])
@@ -717,28 +717,28 @@ trait VectorsSeq extends scalan.ScalanDslStd with VectorsDsl {
   }
 
   case class SeqConstVector[T]
-      (override val const: Rep[T], override val length: IntRep)(implicit eT: Elem[T])
+      (override val const: Rep[T], override val length: IntRep)(implicit eC: Elem[T])
     extends AbsConstVector[T](const, length) {
   }
 
   def mkConstVector[T]
-    (const: Rep[T], length: IntRep)(implicit eT: Elem[T]): Rep[ConstVector[T]] =
+    (const: Rep[T], length: IntRep)(implicit eC: Elem[T]): Rep[ConstVector[T]] =
     new SeqConstVector[T](const, length)
-  def unmkConstVector[T](p: Rep[ConstantVector[T]]) = p match {
+  def unmkConstVector[T](p: Rep[AbstractVector[T]]) = p match {
     case p: ConstVector[T] @unchecked =>
       Some((p.const, p.length))
     case _ => None
   }
 
   case class SeqZeroVector[T]
-      (override val length: IntRep)(implicit eT: Elem[T])
+      (override val length: IntRep)(implicit eC: Elem[T])
     extends AbsZeroVector[T](length) {
   }
 
   def mkZeroVector[T]
-    (length: IntRep)(implicit eT: Elem[T]): Rep[ZeroVector[T]] =
+    (length: IntRep)(implicit eC: Elem[T]): Rep[ZeroVector[T]] =
     new SeqZeroVector[T](length)
-  def unmkZeroVector[T](p: Rep[ConstantVector[T]]) = p match {
+  def unmkZeroVector[T](p: Rep[AbstractVector[T]]) = p match {
     case p: ZeroVector[T] @unchecked =>
       Some((p.length))
     case _ => None
@@ -1054,7 +1054,7 @@ trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
   }
 
   case class ExpConstVector[T]
-      (override val const: Rep[T], override val length: IntRep)(implicit eT: Elem[T])
+      (override val const: Rep[T], override val length: IntRep)(implicit eC: Elem[T])
     extends AbsConstVector[T](const, length)
 
   object ConstVectorMethods {
@@ -1290,9 +1290,9 @@ trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
   }
 
   def mkConstVector[T]
-    (const: Rep[T], length: IntRep)(implicit eT: Elem[T]): Rep[ConstVector[T]] =
+    (const: Rep[T], length: IntRep)(implicit eC: Elem[T]): Rep[ConstVector[T]] =
     new ExpConstVector[T](const, length)
-  def unmkConstVector[T](p: Rep[ConstantVector[T]]) = p.elem.asInstanceOf[Elem[_]] match {
+  def unmkConstVector[T](p: Rep[AbstractVector[T]]) = p.elem.asInstanceOf[Elem[_]] match {
     case _: ConstVectorElem[T] @unchecked =>
       Some((p.asRep[ConstVector[T]].const, p.asRep[ConstVector[T]].length))
     case _ =>
@@ -1300,10 +1300,22 @@ trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
   }
 
   case class ExpZeroVector[T]
-      (override val length: IntRep)(implicit eT: Elem[T])
+      (override val length: IntRep)(implicit eC: Elem[T])
     extends AbsZeroVector[T](length)
 
   object ZeroVectorMethods {
+    object const {
+      def unapply(d: Def[_]): Option[Rep[ZeroVector[T]] forSome {type T}] = d match {
+        case MethodCall(receiver, method, _, _) if receiver.elem.isInstanceOf[ZeroVectorElem[_]] && method.getName == "const" =>
+          Some(receiver).asInstanceOf[Option[Rep[ZeroVector[T]] forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[Rep[ZeroVector[T]] forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+
     object items {
       def unapply(d: Def[_]): Option[Rep[ZeroVector[T]] forSome {type T}] = d match {
         case MethodCall(receiver, method, _, _) if receiver.elem.isInstanceOf[ZeroVectorElem[_]] && method.getName == "items" =>
@@ -1509,10 +1521,36 @@ trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
     }
   }
 
+  object ZeroVectorCompanionMethods {
+    object zero {
+      def unapply(d: Def[_]): Option[IntRep forSome {type T}] = d match {
+        case MethodCall(receiver, method, Seq(len, _*), _) if receiver.elem == ZeroVectorCompanionElem && method.getName == "zero" =>
+          Some(len).asInstanceOf[Option[IntRep forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[IntRep forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+
+    object fromSparseData {
+      def unapply(d: Def[_]): Option[(Coll[Int], Coll[T], IntRep) forSome {type T}] = d match {
+        case MethodCall(receiver, method, Seq(nonZeroIndices, nonZeroValues, length, _*), _) if receiver.elem == ZeroVectorCompanionElem && method.getName == "fromSparseData" =>
+          Some((nonZeroIndices, nonZeroValues, length)).asInstanceOf[Option[(Coll[Int], Coll[T], IntRep) forSome {type T}]]
+        case _ => None
+      }
+      def unapply(exp: Exp[_]): Option[(Coll[Int], Coll[T], IntRep) forSome {type T}] = exp match {
+        case Def(d) => unapply(d)
+        case _ => None
+      }
+    }
+  }
+
   def mkZeroVector[T]
-    (length: IntRep)(implicit eT: Elem[T]): Rep[ZeroVector[T]] =
+    (length: IntRep)(implicit eC: Elem[T]): Rep[ZeroVector[T]] =
     new ExpZeroVector[T](length)
-  def unmkZeroVector[T](p: Rep[ConstantVector[T]]) = p.elem.asInstanceOf[Elem[_]] match {
+  def unmkZeroVector[T](p: Rep[AbstractVector[T]]) = p.elem.asInstanceOf[Elem[_]] match {
     case _: ZeroVectorElem[T] @unchecked =>
       Some((p.asRep[ZeroVector[T]].length))
     case _ =>
@@ -2764,36 +2802,10 @@ trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
       }
     }
   }
-
-  object AbstractVectorCompanionMethods {
-    object zero {
-      def unapply(d: Def[_]): Option[IntRep forSome {type T}] = d match {
-        case MethodCall(receiver, method, Seq(len, _*), _) if receiver.elem == AbstractVectorCompanionElem && method.getName == "zero" =>
-          Some(len).asInstanceOf[Option[IntRep forSome {type T}]]
-        case _ => None
-      }
-      def unapply(exp: Exp[_]): Option[IntRep forSome {type T}] = exp match {
-        case Def(d) => unapply(d)
-        case _ => None
-      }
-    }
-
-    object fromSparseData {
-      def unapply(d: Def[_]): Option[(Coll[Int], Coll[T], IntRep) forSome {type T}] = d match {
-        case MethodCall(receiver, method, Seq(nonZeroIndices, nonZeroValues, length, _*), _) if receiver.elem == AbstractVectorCompanionElem && method.getName == "fromSparseData" =>
-          Some((nonZeroIndices, nonZeroValues, length)).asInstanceOf[Option[(Coll[Int], Coll[T], IntRep) forSome {type T}]]
-        case _ => None
-      }
-      def unapply(exp: Exp[_]): Option[(Coll[Int], Coll[T], IntRep) forSome {type T}] = exp match {
-        case Def(d) => unapply(d)
-        case _ => None
-      }
-    }
-  }
 }
 
 object Vectors_Module extends scalan.ModuleInfo {
-  val dump = "H4sIAAAAAAAAAM1YS2wbRRgeO7Ed2yFNSwOlIiIEQwWCOEGgCgWpSp0EikwSZUOFTFU0Xo+dLbOzm51xZHOoOFUIbhVXJCpxQeoFcUKVKiRAQhw4IYTEmVMpqnqg4gDin9mH1491Ejek8WG0j5l//vm+7394r99GCe6gZ7iOKWYzJhF4RlPXC1zktCUmDNF806rUKVkk1RPWN5/NfXHy6zg6UkLJTcwXOS2htHux1LCDa41sFVEaM51wYTlcoCeLaoe8blFKdGFYLG+YZl3gMiX5osHFfBENl61KcwtdRrEiGtctpjtEEK1AMeeEe89HiPTICO7T6r65arf2YHl5inzoFBsONgS4D3uMu/PXia01mcWapkBjnmurtnQL5qQM07Yc4W+RAnObVsW/HWYYHqBjxUt4G+dhi1peE47BarAya2P9PVwjKzBFTh8Ghzmh1Y2mre6HiijDyRYAdM60qXrSsBFCwMCLyomZFj4zAT4zEp+cRhwDU+N9LF+uOVajidxfbAihhg0mnt/BhG+BLLFK7qML+jv3tKwZl4sb0pWUOmESDD0RoQZFBeD4w/pVfve1a6fjKFNCGYMvlLlwsC7ClHtoZTFjllA+BwBipwZsTUexpXZZgDkdkkjrlmljBpY8KEeBJ2rohpCT5bNRj50I6FPCJv7UWMOOBeedijiv0k0BU7p267EXnv5j6e04irdvkQaTGgjf8Y2CnHw0zgMJHhBJNR4RKLahkJZDutEaU32cCOA4devPyvez6EI8ANHbc3e8gYkE//WX7M/PnomjkZJS+TLFtRLgyJcoMVedgsVECY1Y28Rx36S2MZVXPXlMVUgV16nw0A3DMgSwCDQVGY82kZjNK+3HfACyrnxXLEZyy2u5v7QfP7ku1emgUfeNG6D/Gqf/+W2sKpRwBUoYgpjcx3e4AOLfNeQZ165mmeTo9F3j4rWPhQI31miP79XyJeByXq17vA/Ofp758sqViTufv/uwio+RsiFMbOdm9xAdvpj/R/WjdpTGCl6+VVqZa3+ZXSSME1fPEWDKcSJ4p4ZJYOd4aGUhfIDJ0LLQZidiviDUJIHiZCPgVop0R267vZ0M4mMyijeFzCPrxeP09pmbcZR4AyWqIHteRImyVWcVH3IoSoI0xFn/WawdcoAYO9gMIFa/KdQ6b4fHamI21s0EF5jtLX90AYk6gEzo0qxvZwgKYB/LvU0kKWE1semvSJ5jAsx0OOS6klPjqT2JTJ17IJGFVh6YyDq8nQytefUQES+HtR0Ya/m/3yhlSsSx9hekgarrjtExBr2g9PUcqxiQonuVEwc9FZ0+1hzDhLZ0m7z87Y237txcSahO4ZhXIc9jWiduk+hlilbWkDUsNgsRCdz0C76HPA+VrV3Xu0ElMWgQj2qQAQcrFRPhpQcVxl3+Hl6JjvoSjep3+vQlNtmo25S8dOPvix9+8Lqtmpyu1tU1I4erfbw9aEUdDTN01mqQyt5kdbJr/UFpq7fnh1dgO+dApY1oGexnkhKy4YVyqNTuLRqgadmNMlus7HuToG0a1X1uEh5QcpHjd4NnCADfqlY5uZ8G9MFyOR7icsBgDh0t2TMRDsF/x/unOyIh9knAWfk3cRmbBm3O9d2/n7xaOykAIPU+2r64R97t/lwyYJh0lZTBw6T7HB2N+aDEwxh7pTXHm5jyPIR64VVvajBMa6TsYI8yB01HFHbN+4sPurl879OV53766nfVeGbkxwKLERZ8xAw3nO1oJIoLi5yGvIWYkJ8OlKf/ATTxfakfFgAA"
+  val dump = "H4sIAAAAAAAAAM1YTWwbRRSedWI7tkOa/gSVioiQGioQxCkC9RCkKnVSCDJJlA0VMlXReD12tszObnbGkc2h4lQhuCGOIFGJC1IviBOqVCEhJNRDTwghcebUFlU9UHEA8Wb2x+vfJG5I48Nof+a9efN937z3vNfvoTh30fPcwBSzGYsIPKOr63kusvoiE6ZovG2Xa5QskMpx+4evTn9z4vsYOlREiQ3MFzgtopR3sVh3wmudbBZQCjODcGG7XKBnC2qFnGFTSgxh2ixnWlZN4BIluYLJxVwBDZfscmMTXUFaAY0bNjNcIoiep5hzwv3nI0RGZIb3KXXfWHGaa7Cc3EUusot1F5sCwoc1xr35a8TRG8xmDUugMT+0FUeGBXOSpuXYrgiWSIK7Dbsc3A4zDA/QkcJlvIVzsEQ1pwvXZFWwzDjY+ABXyTJMkdOHIWBOaGW94aj7oQJKc7IJAC1ZDlVP6g5CCBh4RQUx08RnJsRnRuKT1YlrYmp+iOXLVdeuN5D304YQqjvg4qVtXAQeyCIrZz+5aLz3UM9YMWlcl6Ek1Q4T4OiZHmpQVACOP699xh+8ce1MDKWLKG3y+RIXLjZElHIfrQxmzBYq5hBA7FaBrelebKlV5mFOmyRShm05mIEnH8pR4ImahinkZPls1GenB/RJ4ZBgqlZ3tHC/Uz32q3STx5Su3nnq5efuLr4bQ7HWJVLgUgfhu4FTkFOAxgUgwQciocZDAmnrCmk5pOrNMdkniBCOU3f+LP80iy7GQhD9NXfGG7iI899+zfzywtkYGikqlZ+nuFoEHPkiJdaKm7eZKKIRe4u43pvkFqbyqiuPyTKp4BoVPrpRWIYAFoGmep5Hh0jM5pT2tQCAjCffZZuR7PnV7F/6rc+vS3W6aNR74x3Qf80z//w+VhFKuALFTUEsHuA7nAfx7xjytOdXty1yePqBeenap0KBq9Vbz/dK6TJwOafsnu6Dc5Bnvr16deL+1+8fVedjpGQKCzvZ2V2cjkDM/6P6UStKY3k/3yqtnG59mVkgjBNPzz3AlONE+E4Nk8DOsYhlPrqByYhZZLHjWiAINUmgGFkPuZUi3Zbbzmgnw/Mx2Ys3hcyTa4Vj9N7ZmzEUfwvFKyB7XkDxkl1j5QByKEqC1MW54JnWCjlAjF1shRCr3xRq7rctYjUxo3UywQVmu8sfHUCiNiDjhnQb+BmCAtjHc3cXCUpYVWwEFoklJsBNW0BeKFk1ntqVyNS+BxJZxHJAkeV3LbK2aCcjNq8fIOLlsHrgGDtaJK69v4Slm0vuFV8DFfptD+oYtKUy1iVWNqFadKtsLjrZO5OtuqYFHfIWee3HG+/cv7kcV03LEb9YX8C0Rrx+VfoajiYwWU61WUgOIJN+eeAJP0Lla8eld7/VOapDMh6sak1ETferbHXEe3AlOhpItFfr1adFcsh6zaHk1Rt/X/r4ozcd1W91dNGeGzl80Sfa/VbU4ShD5+w6Ke9OVic67PdLW90jP7gC2z4HKm30lsFeJikhe28odErtvtEA/dNOlNlkZc+bYn3DrOxxv/KYkoscbw+eIQB8u1Lh5FF64cfL5XiEywEPc2Rria6JcAj+xj463dskxDaXA+qyI4cPrssuIbY25YMiDaOWb87xJyb9CCFB++WSmgzTKim52C9SLpruUUl1/+89EHXl4ZfLL97+7g/V6aXlhwKbERZ+wIx2eK1oxAvzC5xGogURys8GKtL/AFbmF38bFgAA"
 }
 }
 

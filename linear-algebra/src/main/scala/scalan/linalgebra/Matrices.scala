@@ -180,7 +180,7 @@ trait Matrices extends Vectors { self: LADsl =>
   }
 /*
   abstract class ReplicatedMatrix[T](val replicatedRow: Vector[T], val numRows: Rep[Int])
-                                    (implicit val eT: Elem[T]) extends AbstractMatrix[T] {
+                                    (implicit val eT: Elem[T]) extends Matrix[T] {
 
     def rows = Collection.replicate(numRows, replicatedRow)
     def columns = Collection.indexRange(numColumns).map(j => ConstVector(replicatedRow(j), numRows))
@@ -190,27 +190,27 @@ trait Matrices extends Vectors { self: LADsl =>
     def diagonalValues = Collection.indexRange(Math.min(numRows, numColumns)).map(i => replicatedRow(i))
 
     @OverloadId("rows") 
-    def apply(iRows: Coll[Int])(implicit o: Overloaded1): Matrix[T] = {
+    def apply(iRows: Coll[Int])(implicit o: Overloaded1): Matr[T] = {
       ReplicatedMatrix(replicatedRow, iRows.length)
     }
     @OverloadId("row")
     def apply(row: Rep[Int]): Vector[T] = replicatedRow
     def apply(row: Rep[Int], column: Rep[Int]): Rep[T] = replicatedRow(column)
 
-    def mapRowsBy[R: Elem](f: Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]): Matrix[R] = {
+    def mapRowsBy[R: Elem](f: Rep[Vector[T] => Vector[R] @uncheckedVariance]): Matr[R] = {
       // no effects supported in lambda @f!
       val resultRows = Collection.singleton(replicatedRow).mapBy(f) // TODO: not the most elegant solution
       ReplicatedMatrix(resultRows(toRep(0)), numRows)
     }
 
-    def transpose(implicit n: Numeric[T]): Matrix[T] = CompoundMatrix(columns, numRows)
+    def transpose(implicit n: Numeric[T]): Matr[T] = CompoundMatrix(columns, numRows)
 
-    def reduceByColumns(implicit m: RepMonoid[T], n: Numeric[T]): Vector[T] = {
+    def reduceByColumns(implicit m: RepMonoid[T], n: Numeric[T]): Vec[T] = {
       DenseVector(columns.map(col => col.reduce(m)))
     }
 
     @OverloadId("matrix")
-    def *(matrix: Matrix[T])(implicit n: Numeric[T], o: Overloaded1): Matrix[T] = {
+    def *(matrix: Matr[T])(implicit n: Numeric[T], o: Overloaded1): Matr[T] = {
       matrix match {
         case DenseFlatMatrix(rmValuesB, numColumnsB) =>
           val rowsNew = rows.map { vA =>
@@ -236,12 +236,12 @@ trait Matrices extends Vectors { self: LADsl =>
           CompoundMatrix(rows.map(row => row *^ diagonalVector), numColumns)
         case ConstDiagonalMatrix(diagonalValue, _) =>
           CompoundMatrix(rows.map(row => row *^ diagonalValue), numColumns)
-        case _ => !!!("matcher for @matrix argument in CompoundMatrix.*(matrix: Matrix[T]) is not specified.")
+        case _ => !!!("matcher for @matrix argument in CompoundMatrix.*(matrix: Matr[T]) is not specified.")
       }
     }
 
     @OverloadId("matrix")
-    def +^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = {
+    def +^^(matrix: Matr[T])(implicit n: Numeric[T]): Matr[T] = {
       def res = CompoundMatrix((rows zip matrix.rows).map { case Pair(v, s) => v +^ s }, numColumns)
       matrix match {
         case CompoundMatrix(_, _) => res
@@ -253,7 +253,7 @@ trait Matrices extends Vectors { self: LADsl =>
     }
 
     @OverloadId("matrix")
-    def *^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = {
+    def *^^(matrix: Matr[T])(implicit n: Numeric[T]): Matr[T] = {
       def res = CompoundMatrix((rows zip matrix.rows).map { case Pair(v, s) => v *^ s }, numColumns)
       matrix match {
         case CompoundMatrix(_, _) => res
@@ -708,8 +708,6 @@ trait Matrices extends Vectors { self: LADsl =>
 }
 
 trait MatricesDsl extends impl.MatricesAbs { self: LADsl =>
-
-  type MatrixCompanion = Rep[AbstractMatrixCompanion]
 
   implicit class MatrixExtensions[T](matrix: Matrix[T]) {
     implicit def eItem: Elem[T] = matrix.selfType1.asInstanceOf[AbstractMatrixElem[T, _]].eT
