@@ -5,7 +5,7 @@ package scalan.linalgebra
   */
 
 import scalan._
-import scalan.common.OverloadHack.{Overloaded2, Overloaded1}
+import scalan.common.OverloadHack.{Overloaded1, Overloaded2}
 import scala.annotation.unchecked.uncheckedVariance
 
 trait Matrices extends Vectors { self: LADsl =>
@@ -643,8 +643,6 @@ trait Matrices extends Vectors { self: LADsl =>
       }
       DenseFlatMatrix(rmValues, numColumns)
     }
-    def fromNColl[T](items: NColl[(Int, T)], numColumns: Rep[Int])
-                             (implicit elem: Elem[T], o: Overloaded1): Matrix[T] = ???
     @OverloadId("dense")
     def fromNColl[T](items: NColl[T], numColumns: Rep[Int])
                              (implicit elem: Elem[T], o: Overloaded2): Matrix[T] = {
@@ -678,11 +676,9 @@ trait Matrices extends Vectors { self: LADsl =>
       val item = cols(0)(0)
       ConstMatrix(item, numColumns, numRows)
     }
-    def fromNColl[T](items: NColl[(Int, T)], numColumns: Rep[Int])
-                             (implicit elem: Elem[T], o: Overloaded1): Matrix[T] = ???
     @OverloadId("dense")
     def fromNColl[T](items: NColl[T], numColumns: Rep[Int])
-                             (implicit elem: Elem[T], o: Overloaded2): Matrix[T] = {
+                    (implicit elem: Elem[T], o: Overloaded2): Matrix[T] = {
       val rmValues = items.flatMap { coll => coll }
       val numRows = rmValues.length /! numColumns
       val item = rmValues(0)

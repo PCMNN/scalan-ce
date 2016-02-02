@@ -6,7 +6,7 @@ package scalan.linalgebra
 
 import scalan._
 import scalan.collections.{CollectionsDsl, CollectionsDslSeq, CollectionsDslExp}
-import scalan.common.OverloadHack.{Overloaded2, Overloaded1}
+import scalan.common.OverloadHack.{Overloaded1, Overloaded2}
 import scala.annotation.unchecked.uncheckedVariance
 
 trait Vectors { self: LADsl =>
@@ -762,51 +762,39 @@ trait Vectors { self: LADsl =>
   trait AbstractVectorCompanion extends TypeFamily1[AbstractVector]
 
   trait DenseVectorCompanion extends ConcreteClass1[DenseVector] {
-    def zero[T: Elem](len: IntRep): Vector[T] = {
-      val zeroV = element[T].defaultRepValue
-      DenseVector(Collection.replicate(len, zeroV))
+    def zero[T: Elem](len: IntRep): Vector[T] = ZeroVector(len)
+    def apply[T: Elem](nonZeroIndices: Coll[Int], nonZeroValues: Coll[T], length: IntRep): Vector[T] =
+      SparseVector(nonZeroIndices, nonZeroValues, length).convertTo[DenseVector[T]]
+    @OverloadId("DenseVectorCompanion_apply_nonZeroItems")
+    def apply[T: Elem](nonZeroItems: Coll[(Int, T)], length: IntRep)(implicit o: Overloaded2): Vector[T] = {
+      SparseVectorBoxed(nonZeroItems, length).convertTo[DenseVector[T]]
     }
-    def fromSparseData[T: Elem](nonZeroIndices: Coll[Int],
-                                nonZeroValues: Coll[T], length: IntRep): Vector[T] = ???
   }
   trait ConstVectorCompanion extends ConcreteClass1[ConstVector] {
     def zero[T: Elem](len: IntRep): Vector[T] = ZeroVector(len)
-    def fromSparseData[T: Elem](nonZeroIndices: Coll[Int],
-                                         nonZeroValues: Coll[T], length: IntRep): Vector[T] = ???
   }
-  trait ZeroVectorCompanion extends ConcreteClass1[ConstVector] {
-    def zero[T: Elem](len: IntRep): Vector[T] = ZeroVector(len)
-    def fromSparseData[T: Elem](nonZeroIndices: Coll[Int],
-                                         nonZeroValues: Coll[T], length: IntRep): Vector[T] = ???
-  }
+  trait ZeroVectorCompanion extends ConcreteClass1[ConstVector]
   trait SparseVectorCompanion extends ConcreteClass1[SparseVector] {
-    def apply[T: Elem](items: Coll[T])(implicit n: Numeric[T], o: Overloaded1): Rep[SparseVector[T]] = {
-      val nonZeroItems =
-        (Collection.indexRange(items.length) zip items).filter { case Pair(i, v) => v !== n.zero }
-      SparseVector(nonZeroItems, items.length)
-    }
+    def apply[T: Elem](items: Coll[T])(implicit o: Overloaded1): Vector[T] =
+      DenseVector(items).convertTo[SparseVector[T]]
     @OverloadId("SparseVectorCompanion_apply_nonZeroItems")
-    def apply[T: Elem](nonZeroItems: Coll[(Int, T)], length: IntRep)
-                      (implicit n: Numeric[T], o: Overloaded2): Rep[SparseVector[T]] = {
-      SparseVector(nonZeroItems.as, nonZeroItems.bs, length)
-    }
-    def zero[T: Elem](len: IntRep) = SparseVector(emptyColl[Int], emptyColl[T], len)
-    def fromSparseData[T: Elem](nonZeroIndices: Coll[Int], nonZeroValues: Coll[T],
-                                         length: IntRep): Vector[T] = SparseVector(nonZeroIndices, nonZeroValues, length)
+    def apply[T: Elem](nonZeroItems: Coll[(Int, T)], length: IntRep)(implicit o: Overloaded2): Vector[T] =
+      SparseVectorBoxed(nonZeroItems, length).convertTo[SparseVector[T]]
+    def zero[T: Elem](len: IntRep): Vector[T] = ZeroVector(len)
   }
   trait SparseVectorBoxedCompanion extends ConcreteClass1[SparseVectorBoxed] {
-    def apply[T: Elem](items: Coll[T])(implicit n: Numeric[T], o: Overloaded1): Rep[SparseVectorBoxed[T]] = {
-      val nonZeroItems =
-        (Collection.indexRange(items.length) zip items).filter { case Pair(i, v) => v !== n.zero }
-      SparseVectorBoxed(nonZeroItems, items.length)
-    }
-    @OverloadId("SparseVector1Companion_apply_nonZeroItems")
-    def apply[T: Elem](nonZeroIndices: Coll[Int], nonZeroValues: Coll[T], length: IntRep)
-                      (implicit n: Numeric[T], o: Overloaded2): Rep[SparseVectorBoxed[T]] = {
-      SparseVectorBoxed(nonZeroIndices zip nonZeroValues, length)
-    }
-    def zero[T: Elem](len: IntRep) = SparseVector(emptyColl[Int], emptyColl[T], len)
-    def fromSparseData[T: Elem](nonZeroIndices: Coll[Int], nonZeroValues: Coll[T], length: IntRep): Vector[T] = SparseVectorBoxed(nonZeroIndices zip nonZeroValues, length)
+    def apply[T: Elem](items: Coll[T])(implicit o: Overloaded1): Vector[T] =
+      DenseVector(items).convertTo[SparseVectorBoxed[T]]
+    @OverloadId("SparseVectorBoxedCompanion_apply_nonZeroItems")
+    def apply[T: Elem](indices: Coll[Int], values: Coll[T], length: IntRep)(implicit o: Overloaded2): Vector[T] =
+      SparseVectorBoxed(indices zip values, length)
+    def zero[T: Elem](len: IntRep): Vector[T] = ZeroVector(len)
+  }
+  trait ShiftVectorCompanion extends ConcreteClass1[ShiftVector] {
+    def zero[T: Elem](len: IntRep): Vector[T] = ZeroVector(len)
+  }
+  trait ShiftVectorBoxedCompanion extends ConcreteClass1[ShiftVectorBoxed] {
+    def zero[T: Elem](len: IntRep): Vector[T] = ZeroVector(len)
   }
 }
 

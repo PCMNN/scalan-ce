@@ -1,7 +1,7 @@
 package scalan.linalgebra
 
 import scalan._
-import scalan.common.OverloadHack.{Overloaded2, Overloaded1}
+import scalan.common.OverloadHack.{Overloaded1, Overloaded2}
 import scala.annotation.unchecked.uncheckedVariance
 import scala.reflect.runtime.universe.{WeakTypeTag, weakTypeTag}
 import scalan.meta.ScalanAst._
@@ -53,7 +53,7 @@ trait MatricesAbs extends scalan.ScalanDsl with Matrices {
     protected def getDefaultRep = AbstractMatrix
   }
 
-  abstract class AbstractMatrixCompanionAbs extends CompanionDef[AbstractMatrixCompanionAbs] {
+  abstract class AbstractMatrixCompanionAbs extends CompanionDef[AbstractMatrixCompanionAbs] with AbstractMatrixCompanion {
     def selfType = AbstractMatrixCompanionElem
     override def toString = "AbstractMatrix"
   }
@@ -854,21 +854,9 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
       }
     }
 
-    object fromNColl {
-      def unapply(d: Def[_]): Option[(NColl[(Int, T)], Rep[Int], Elem[T]) forSome {type T}] = d match {
-        case MethodCall(receiver, method, Seq(items, numColumns, elem, _*), _) if receiver.elem == DenseFlatMatrixCompanionElem && method.getName == "fromNColl" && method.getAnnotation(classOf[scalan.OverloadId]) == null =>
-          Some((items, numColumns, elem)).asInstanceOf[Option[(NColl[(Int, T)], Rep[Int], Elem[T]) forSome {type T}]]
-        case _ => None
-      }
-      def unapply(exp: Exp[_]): Option[(NColl[(Int, T)], Rep[Int], Elem[T]) forSome {type T}] = exp match {
-        case Def(d) => unapply(d)
-        case _ => None
-      }
-    }
-
     object fromNColl_dense {
       def unapply(d: Def[_]): Option[(NColl[T], Rep[Int], Elem[T]) forSome {type T}] = d match {
-        case MethodCall(receiver, method, Seq(items, numColumns, elem, _*), _) if receiver.elem == DenseFlatMatrixCompanionElem && method.getName == "fromNColl" && { val ann = method.getAnnotation(classOf[scalan.OverloadId]); ann != null && ann.value == "dense" } =>
+        case MethodCall(receiver, method, Seq(items, numColumns, elem, _*), _) if receiver.elem == DenseFlatMatrixCompanionElem && method.getName == "fromNColl" =>
           Some((items, numColumns, elem)).asInstanceOf[Option[(NColl[T], Rep[Int], Elem[T]) forSome {type T}]]
         case _ => None
       }
@@ -1442,21 +1430,9 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
       }
     }
 
-    object fromNColl {
-      def unapply(d: Def[_]): Option[(NColl[(Int, T)], Rep[Int], Elem[T]) forSome {type T}] = d match {
-        case MethodCall(receiver, method, Seq(items, numColumns, elem, _*), _) if receiver.elem == ConstMatrixCompanionElem && method.getName == "fromNColl" && method.getAnnotation(classOf[scalan.OverloadId]) == null =>
-          Some((items, numColumns, elem)).asInstanceOf[Option[(NColl[(Int, T)], Rep[Int], Elem[T]) forSome {type T}]]
-        case _ => None
-      }
-      def unapply(exp: Exp[_]): Option[(NColl[(Int, T)], Rep[Int], Elem[T]) forSome {type T}] = exp match {
-        case Def(d) => unapply(d)
-        case _ => None
-      }
-    }
-
     object fromNColl_dense {
       def unapply(d: Def[_]): Option[(NColl[T], Rep[Int], Elem[T]) forSome {type T}] = d match {
-        case MethodCall(receiver, method, Seq(items, numColumns, elem, _*), _) if receiver.elem == ConstMatrixCompanionElem && method.getName == "fromNColl" && { val ann = method.getAnnotation(classOf[scalan.OverloadId]); ann != null && ann.value == "dense" } =>
+        case MethodCall(receiver, method, Seq(items, numColumns, elem, _*), _) if receiver.elem == ConstMatrixCompanionElem && method.getName == "fromNColl" =>
           Some((items, numColumns, elem)).asInstanceOf[Option[(NColl[T], Rep[Int], Elem[T]) forSome {type T}]]
         case _ => None
       }
@@ -2376,10 +2352,13 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
       }
     }
   }
+
+  object AbstractMatrixCompanionMethods {
+  }
 }
 
 object Matrices_Module extends scalan.ModuleInfo {
-  val dump = "H4sIAAAAAAAAAM1YTWwbRRSedez4L0r6CwFhEYIBgWicglAPOVTBcSFom0TZUCFTgcbribtldnYzMw42hx57gBviikQlLki9IE4IqUJCSIgDJ1QhceZUiqoe6AGBeDPeXa8du6ZuiOLDaHdn3nvf+973Zmd9/TZKCY6eFTammC24ROIFS18vC1m0Kkw6sn3eqzcpWSHbs963n53+4vGvE2imiiYvYbEiaBVlOxeVlh9dW2THRFnMbCKkx4VET5k6Qsn2KCW2dDxWcly3KXGNkpLpCLlkomTNq7d30BVkmOiI7TGbE0msMsVCEBE8zxCFyInus/q+ve53Y7CSyqIUy2KLY0cCfIhxpLN+k/hWm3ms7Uo0HUBb9xUsWJN2XN/jMgyRBneXvHp4m2QYHqBj5mW8i0sQolGyJHdYAyzzPrbfww2yBkvU8iQAFoRub7V9fT9hopwgO0DQqutT/aTlI4SgAi9pEAtdfhYifhYUP0WLcAdT5wOsJje412qjzs+YQKjlg4sXR7gIPZAKqxc/vGi/fc/Kuwll3FJQ0jrDSXD05BA16FIAjz9sfizuvnbtTALlqijniOWakBzbMl7ygK08ZsyTGnNEIOYNqNb8sGrpKMuwpk8SWdtzfczAU0DlFNSJOrYj1WL1bCqozhDq09In4VKj5RtRvnND8tW6KWNKN249duqZ3ytvJVCiN0QWXFogfB46BTmFbJzHIItWEESNMxIZW5ppNWRb3TF9HxARHc/d+qP+/SK6mIhIDGL+t7qBi5T45Wb+5+fPJlCmqlV+juJGFXgUFUrcdV72mKyijLdLeGcmvYupuhpYx3SdbOMmlQG7cVomgBaJ5ob2o08UZ0ta+0ZIQL4j3zWPkeK5jeKf1o+fXFfq5GiqM9Np0H+cM3//Or0ttXAlynD3AqZNIkKKJ6C3e0nPlaOOGFkNPTUbwVJDATywpgtOmi4bFIajp4cJyCcb3HFhw9olr3z3zZt3bqyltIaOBdxp6J3tI6CuS6PKzliESKtMDhJMrsOK5bnk6Pxd551rH0ktDaPVuzut1y5D8kva7on7qCTcJb+8evXknc/fPa67O1NzpIv94uID9HbYiv9j76LeQk6Xg7eFVvrp3smZFcIEARkHHTmkA9V4MprrVB4qMNtnXY4nUoiZxoLOGn36SZCtEE1StdpIGQ5GXYgEVxguOGDpkU3zBL199kYCpd5AqW1oYGGiVM1rsnpIP7xeJWnJV8NnRi/9QDfm2I3o1r851M25D7VemDf6qjLWTriHzP5mTHLv/XG6PYJzAWYDFY+CM9aGoIZTgxNb1OPLDyLfaaU4VaZx1Ptor/FBiXcA5kLM7PVDpSfYm5iQqzLIbKCo9oIbWxKDrdNgvTlQ1/urpnxZJTuOlE7ELA9KR/1oD6+IpusObngM0/08jOzH7rES4Bpr9+g1PrDdYy/mw1v4A949Yti6vOx3AY7rtnvYKsTSnRwo3Ak4bD58jUZouM/luGmo8a/ummBhRjtVp2J0NDiRUQcoa5Aax0HLcjQ/5LBmBUdcoOHKvU/XXvjpq9/0x0FOHZbhK4hFf0HEPwp6SUmZyyuCxuBCldXRWUP9F0dXMK/dEQAA"
+  val dump = "H4sIAAAAAAAAAM1YTWwbRRSedeL4L0r6CwEREYIBgWicglAPOVTBSSDITaJsqJCpQOP1xN0yO7uZGQebQ489wA1xRaISF6ReECeEVCEhJMSBE6qQOHMqRVUP7aEC8Wa8u9511glxQxQfRrs789773ve+NzvrG3dQWnD0vLAwxWzGIRLPmPp6XsiiucikLdsX3HqTkgWyOeF+/8XZr578NoXGq2jkMhYLglZRrnOx2PLCa5NsVVAOM4sI6XIh0TMVHaFkuZQSS9ouK9mO05S4RkmpYgs5V0HDNbfe3kJXkVFBxyyXWZxIYpYpFoII/3mWKER2eJ/T9+1VrxuDlVQWpUgWGxzbEuBDjGOd9evEM9vMZW1HojEf2qqnYMGajO14LpdBiAy4u+zWg9thhuEBOlG5grdxCUI0SqbkNmuAZcHD1ge4QVZgiVo+DIAFoZsbbU/fD1VQXpAtIGjZ8ah+0vIQQlCBVzSImS4/MyE/M4qfokm4jan9EVaTa9xttVHnZwwh1PLAxct7uAg8kEVWL358yXr3gVlwUsq4paBkdIYj4OjpPmrQpQAef1r/VNx74/q5FMpXUd4W8zUhObZktOQ+WwXMmCs15pBAzBtQrel+1dJR5mFNjyRylut4mIEnn8pRqBO1LVuqxerZqF+dPtRnpEeCpUbLM8J8p/rkq3VTxpSu3X7izHN/Lr6TQql4iBy4NEH4PHAKcgrYuIBBFi0/iBrHJTI2NNNqyLW6Y2YXECEdL9z+q/7jLLqUCkn0Y/63uoGLtPjtVuHXF8+nULaqVb5EcaMKPIpFSpxVXnaZrKKsu014Zyazjam6Sqxjpk42cZNKn90oLUNAi0RTffvRI4qzOa19IyCg0JHvistIcWmteN/8+bMbSp0cjXZmOg36j33u79/HNqUWrkRZ7lzEtElEQPEQ9Hac9Hw57Ig9q6GnJkJYapgED6zpgJOmw5LCcPRsPwF5ZI3bDmxY2+S1H757++7NlbTW0AmfOw29s3341HVpVNkZsxBpmckkweQ7rJiuQ45P37Pfu/6J1NIwWvHdabV2BZKf03ZP7aKSYJf8+tq103e/fP+k7u5szZYO9oqz++jtoBX/x95F8UKOlf23hVb62fjk+AJhgoCM/Y7s04FqPB3OdSoPFZjosS5HE5mMmEaCThg9+kmRjQDNsGq1PWWYjHoyFNxkf8EBS4+tV07RO+dvplD6LZTehAYWFZSuuU1WD+iH16skLfl68MyI0w90Y46dkG79m0LdnHtQ64UFo6cqA+2EO8jsbcZh7n44SLeHcC7CrK/iveAMtCGo4UxyYrN6fHU/8h1TilNlGkS9j8eND0u8CZgnI2ZvHik9wd7EhFyWfmaJotoJbmBJJFtnwHo9UdcHq6ZCWSU7iJRORSwPS0e9aI+uiMbqNm64DNODPIwcxO6x4OMaaPeIGx/a7rET89Et/CHvHhFsXV4OugAndds9ahUi6Y4kCncIDpuPXqM+Gt6lYQrqXLmEHZu2e7slHn+f3RI3TuiWnV+Hg7KqxofdNf7CrHaqDunouH9ApDZUsEFqHPuEcDTd5+xo+iduqMrVB5+vvPTLN3/ob5W8OrvDRxkL/xGJfqPECUxX5hcEjcAF0amTvIb6L4deZIZsEgAA"
 }
 }
 
