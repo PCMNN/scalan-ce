@@ -116,17 +116,17 @@ trait Matrices extends Vectors { self: LADsl =>
       def mT = matrix.transpose
       def direct = rows.flatMap { row => (mT * row).items}
       matrix match {
-        case DenseFlatMatrixMatcher(_, width) =>
+        case DenseFlatMatrix(_, width) =>
           DenseFlatMatrix(direct, width)
-        case CompoundMatrixMatcher(_, width) =>
+        case CompoundMatrix(_, width) =>
           DenseFlatMatrix(direct, width)
-        case ConstMatrixMatcher(value, width, _) =>
+        case ConstMatrix(value, width, _) =>
           val rowsConstant = (reduceByRows *^ value).items.map(v => ConstVector(v, width))
           CompoundMatrix(rowsConstant, width)
-        case DiagonalMatrixMatcher(diagonalValues) =>
+        case DiagonalMatrix(diagonalValues) =>
           val diagonalReplicated = Collection.replicate(numRows, diagonalValues).flatMap(coll => coll)
           DenseFlatMatrix((DenseVector(rmValues) *^ DenseVector(diagonalReplicated)).items, numColumns)
-        case ConstDiagonalMatrixMatcher(diagonalValue, _) =>
+        case ConstDiagonalMatrix(diagonalValue, _) =>
           DenseFlatMatrix((DenseVector(rmValues) *^ diagonalValue).items, numColumns)
         case _ => !!!("matcher for @matrix argument in DenseFlatMatrix.*(matrix: Matrix[T]) is not specified.")
       }
@@ -135,18 +135,18 @@ trait Matrices extends Vectors { self: LADsl =>
     @OverloadId("matrix")
     def +^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = {
       matrix match {
-        case DenseFlatMatrixMatcher(rmValues1, _) =>
+        case DenseFlatMatrix(rmValues1, _) =>
           DenseFlatMatrix((DenseVector(rmValues) +^ DenseVector(rmValues1)).items, numColumns)
-        case CompoundMatrixMatcher(rows1, _) =>
+        case CompoundMatrix(rows1, _) =>
           DenseFlatMatrix((rows zip rows1).flatMap { case Pair(v1, v2) => (v1 +^ v2).items }, numColumns)
-        case ConstMatrixMatcher(value, _, _) =>
+        case ConstMatrix(value, _, _) =>
           DenseFlatMatrix((DenseVector(rmValues) +^ value).items, numColumns)
-        case DiagonalMatrixMatcher(diagonal) =>
+        case DiagonalMatrix(diagonal) =>
           val width = diagonal.length
           val mainDiagonalIndices = Collection.indexRange(width).map(i => i * width + i)
           val newValues = (diagonal zip rmValues(mainDiagonalIndices)).map { case Pair(d, v) => d + v }
           DenseFlatMatrix(rmValues.updateMany(mainDiagonalIndices, newValues), numColumns)
-        case ConstDiagonalMatrixMatcher(diagonalValue, width) =>
+        case ConstDiagonalMatrix(diagonalValue, width) =>
           val mainDiagonalIndices = Collection.indexRange(width).map(i => i * width + i)
           val newValues = rmValues(mainDiagonalIndices).map(v => diagonalValue + v)
           DenseFlatMatrix(rmValues.updateMany(mainDiagonalIndices, newValues), numColumns)
@@ -157,17 +157,17 @@ trait Matrices extends Vectors { self: LADsl =>
     @OverloadId("matrix")
     def *^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = {
       matrix match {
-        case DenseFlatMatrixMatcher(rmValues1, _) =>
+        case DenseFlatMatrix(rmValues1, _) =>
           DenseFlatMatrix((DenseVector(rmValues) *^ DenseVector(rmValues1)).items, numColumns)
-        case CompoundMatrixMatcher(rows1, _) =>
+        case CompoundMatrix(rows1, _) =>
           CompoundMatrix((rows zip rows1).map { case Pair(v1, v2) => v1 *^ v2 }, numColumns)
-        case ConstMatrixMatcher(value, _, _) =>
+        case ConstMatrix(value, _, _) =>
           DenseFlatMatrix((DenseVector(rmValues) *^ value).items, numColumns)
-        case DiagonalMatrixMatcher(diagonalValues) =>
+        case DiagonalMatrix(diagonalValues) =>
           val width = diagonalValues.length
           val mainDiagonalIndices = Collection.indexRange(width).map(i => i * width + i)
           DiagonalMatrix((DenseVector(rmValues(mainDiagonalIndices)) *^ DenseVector(diagonalValues)).items)
-        case ConstDiagonalMatrixMatcher(diagonalValue, width) =>
+        case ConstDiagonalMatrix(diagonalValue, width) =>
           val mainDiagonalIndices = Collection.indexRange(width).map(i => i * width + i)
           DiagonalMatrix((DenseVector(rmValues(mainDiagonalIndices)) *^ diagonalValue).items)
         case _ => !!!("matcher for @matrix argument in DenseFlatMatrix.*^^(matrix: Matrix[T]) is not specified.")
@@ -212,29 +212,29 @@ trait Matrices extends Vectors { self: LADsl =>
     @OverloadId("matrix")
     def *(matrix: Matrix[T])(implicit n: Numeric[T], o: Overloaded1): Matrix[T] = {
       matrix match {
-        case DenseFlatMatrixMatcher(rmValuesB, numColumnsB) =>
+        case DenseFlatMatrix(rmValuesB, numColumnsB) =>
           val rowsNew = rows.map { vA =>
             // TODO: rewrite with respect towards type vectors in @self (if sparse - make it efficient)
             val itemsA = vA.items.flatMap(a => Collection.replicate(numColumnsB, a))
             DenseFlatMatrix((itemsA zip rmValuesB).map { case Pair(v1, v2) => v1 * v2 }, numColumnsB).reduceByColumns
           }
           CompoundMatrix(rowsNew, numColumnsB)
-        case CompoundMatrixMatcher(rowsB, numColumnsB) =>
+        case CompoundMatrix(rowsB, numColumnsB) =>
           val (is, vs) = (replicatedRow.nonZeroIndices, replicatedRow.nonZeroValues)
           val res = CompoundMatrix((vs zip rowsB(is)).map { case Pair(a, vB) => vB *^ a }, numColumnsB).reduceByColumns
           // TODO: find a proper way to carry over type of vector (Sparse or Dense)
           ReplicatedMatrix(res, numRows)
-        case ReplicatedMatrixMatcher(rowsB, numColumnsB) =>
+        case ReplicatedMatrix(rowsB, numColumnsB) =>
           val vs = matrix.replicatedRow
           val res = CompoundMatrix((vs zip rowsB(is)).map { case Pair(a, vB) => vB *^ a }, numColumnsB).reduceByColumns
 
-        case ConstMatrixMatcher(value, width, _) =>
+        case ConstMatrix(value, width, _) =>
           val rowsConstant = (reduceByRows *^ value).items.map(v => ConstVector(v, width))
           CompoundMatrix(rowsConstant, width)
-        case DiagonalMatrixMatcher(diagonalValues) =>
+        case DiagonalMatrix(diagonalValues) =>
           val diagonalVector = DenseVector(diagonalValues)
           CompoundMatrix(rows.map(row => row *^ diagonalVector), numColumns)
-        case ConstDiagonalMatrixMatcher(diagonalValue, _) =>
+        case ConstDiagonalMatrix(diagonalValue, _) =>
           CompoundMatrix(rows.map(row => row *^ diagonalValue), numColumns)
         case _ => !!!("matcher for @matrix argument in CompoundMatrix.*(matrix: Matrix[T]) is not specified.")
       }
@@ -244,10 +244,10 @@ trait Matrices extends Vectors { self: LADsl =>
     def +^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = {
       def res = CompoundMatrix((rows zip matrix.rows).map { case Pair(v, s) => v +^ s }, numColumns)
       matrix match {
-        case CompoundMatrixMatcher(_, _) => res
-        case ConstMatrixMatcher(_, _, _) => res
-        case DiagonalMatrixMatcher(_) => res
-        case ConstDiagonalMatrixMatcher(_, _) => res
+        case CompoundMatrix(_, _) => res
+        case ConstMatrix(_, _, _) => res
+        case DiagonalMatrix(_) => res
+        case ConstDiagonalMatrix(_, _) => res
         case _ => matrix +^^ self
       }
     }
@@ -256,11 +256,11 @@ trait Matrices extends Vectors { self: LADsl =>
     def *^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = {
       def res = CompoundMatrix((rows zip matrix.rows).map { case Pair(v, s) => v *^ s }, numColumns)
       matrix match {
-        case CompoundMatrixMatcher(_, _) => res
-        case ConstMatrixMatcher(_, _, _) => res
-        case DiagonalMatrixMatcher(diagonal) =>
+        case CompoundMatrix(_, _) => res
+        case ConstMatrix(_, _, _) => res
+        case DiagonalMatrix(diagonal) =>
           DiagonalMatrix((diagonalValues zip diagonal).map { case Pair(v, d) => v * d })
-        case ConstDiagonalMatrixMatcher(diagonalValue, width) =>
+        case ConstDiagonalMatrix(diagonalValue, width) =>
           DiagonalMatrix(diagonalValues.map(v => v * diagonalValue))
         case _ => matrix *^^ self
       }
@@ -318,14 +318,14 @@ trait Matrices extends Vectors { self: LADsl =>
     @OverloadId("matrix")
     def *(matrix: Matrix[T])(implicit n: Numeric[T], o: Overloaded1): Matrix[T] = {
       matrix match {
-        case DenseFlatMatrixMatcher(rmValuesB, numColumnsB) =>
+        case DenseFlatMatrix(rmValuesB, numColumnsB) =>
           val rowsNew = rows.map { vA =>
             // TODO: rewrite with respect towards type vectors in @self (if sparse - make it efficient)
             val itemsA = vA.items.flatMap(a => Collection.replicate(numColumnsB, a))
             DenseFlatMatrix((itemsA zip rmValuesB).map { case Pair(v1, v2) => v1 * v2 }, numColumnsB).reduceByColumns
           }
           CompoundMatrix(rowsNew, numColumnsB)
-        case CompoundMatrixMatcher(rowsB, numColumnsB) =>
+        case CompoundMatrix(rowsB, numColumnsB) =>
           val rowsNew = rows.map { vA =>
             val (is, vs) = (vA.nonZeroIndices, vA.nonZeroValues)
             val res = CompoundMatrix((vs zip rowsB(is)).map { case Pair(a, vB) => vB *^ a }, numColumnsB).reduceByColumns
@@ -333,13 +333,13 @@ trait Matrices extends Vectors { self: LADsl =>
             res//.convertTo(vA.element)
           }
           CompoundMatrix(rowsNew, numColumnsB)
-        case ConstMatrixMatcher(value, width, _) =>
+        case ConstMatrix(value, width, _) =>
           val rowsConstant = (reduceByRows *^ value).items.map(v => ConstVector(v, width))
           CompoundMatrix(rowsConstant, width)
-        case DiagonalMatrixMatcher(diagonalValues) =>
+        case DiagonalMatrix(diagonalValues) =>
           val diagonalVector = DenseVector(diagonalValues)
           CompoundMatrix(rows.map(row => row *^ diagonalVector), numColumns)
-        case ConstDiagonalMatrixMatcher(diagonalValue, _) =>
+        case ConstDiagonalMatrix(diagonalValue, _) =>
           CompoundMatrix(rows.map(row => row *^ diagonalValue), numColumns)
         case _ => !!!("matcher for @matrix argument in CompoundMatrix.*(matrix: Matrix[T]) is not specified.")
       }
@@ -349,10 +349,10 @@ trait Matrices extends Vectors { self: LADsl =>
     def +^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = {
       def res = CompoundMatrix((rows zip matrix.rows).map { case Pair(v, s) => v +^ s }, numColumns)
       matrix match {
-        case CompoundMatrixMatcher(_, _) => res
-        case ConstMatrixMatcher(_, _, _) => res
-        case DiagonalMatrixMatcher(_) => res
-        case ConstDiagonalMatrixMatcher(_, _) => res
+        case CompoundMatrix(_, _) => res
+        case ConstMatrix(_, _, _) => res
+        case DiagonalMatrix(_) => res
+        case ConstDiagonalMatrix(_, _) => res
         case _ => matrix +^^ self
       }
     }
@@ -361,11 +361,11 @@ trait Matrices extends Vectors { self: LADsl =>
     def *^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = {
       def res = CompoundMatrix((rows zip matrix.rows).map { case Pair(v, s) => v *^ s }, numColumns)
       matrix match {
-        case CompoundMatrixMatcher(_, _) => res
-        case ConstMatrixMatcher(_, _, _) => res
-        case DiagonalMatrixMatcher(diagonal) =>
+        case CompoundMatrix(_, _) => res
+        case ConstMatrix(_, _, _) => res
+        case DiagonalMatrix(diagonal) =>
           DiagonalMatrix((diagonalValues zip diagonal).map { case Pair(v, d) => v * d })
-        case ConstDiagonalMatrixMatcher(diagonalValue, width) =>
+        case ConstDiagonalMatrix(diagonalValue, width) =>
           DiagonalMatrix(diagonalValues.map(v => v * diagonalValue))
         case _ => matrix *^^ self
       }
@@ -427,17 +427,17 @@ trait Matrices extends Vectors { self: LADsl =>
     def *(matrix: Matrix[T])(implicit n: Numeric[T], o: Overloaded1): Matrix[T] = {
       def row = matrix.reduceByColumns *^ constItem
       matrix match {
-        case DenseFlatMatrixMatcher(rmValuesB, width) =>
+        case DenseFlatMatrix(rmValuesB, width) =>
           DenseFlatMatrix(Collection.replicate(numRows, row).flatMap(v => v.items), width)
-        case CompoundMatrixMatcher(_, width) =>
+        case CompoundMatrix(_, width) =>
           CompoundMatrix(Collection.replicate(numRows, row), width)
-        case ConstMatrixMatcher(value, width, _) =>
+        case ConstMatrix(value, width, _) =>
           ConstMatrix(value * constItem * numColumns.to[T], numRows, width)
-        case DiagonalMatrixMatcher(diagonalValues) =>
+        case DiagonalMatrix(diagonalValues) =>
           val rowDiag = DenseVector(diagonalValues) *^ constItem
           // TODO: it can be optimized with new matrix class
           DenseFlatMatrix(Collection.replicate(numRows, rowDiag).flatMap(v => v.items), diagonalValues.length)
-        case ConstDiagonalMatrixMatcher(diagonalValue, _) =>
+        case ConstDiagonalMatrix(diagonalValue, _) =>
           ConstMatrix(constItem * diagonalValue, numRows, numColumns)
         case _ => !!!("matcher for @matrix argument in ConstMatrix.*(matrix: Matrix[T]) is not specified.")
       }
@@ -446,10 +446,10 @@ trait Matrices extends Vectors { self: LADsl =>
     @OverloadId("matrix")
     def +^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = {
       matrix match {
-        case ConstMatrixMatcher(other_item, _, _) =>
+        case ConstMatrix(other_item, _, _) =>
           ConstMatrix(constItem + other_item, numColumns, numRows)
-        case DiagonalMatrixMatcher(_) => !!!("ConstMatrix +^^ DiagonalMatrix creates DenseFlatMatrix!")
-        case ConstDiagonalMatrixMatcher(_, _) => !!!("ConstMatrix +^^ ConstDiagonalMatrix creates DenseFlatMatrix!")
+        case DiagonalMatrix(_) => !!!("ConstMatrix +^^ DiagonalMatrix creates DenseFlatMatrix!")
+        case ConstDiagonalMatrix(_, _) => !!!("ConstMatrix +^^ ConstDiagonalMatrix creates DenseFlatMatrix!")
         case _ => matrix +^^ self
       }
     }
@@ -457,11 +457,11 @@ trait Matrices extends Vectors { self: LADsl =>
     @OverloadId("matrix")
     def *^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = {
       matrix match {
-        case ConstMatrixMatcher(other_item, _, _) =>
+        case ConstMatrix(other_item, _, _) =>
           ConstMatrix(constItem * other_item, numColumns, numRows)
-        case DiagonalMatrixMatcher(diagonal) =>
+        case DiagonalMatrix(diagonal) =>
           DiagonalMatrix((DenseVector(diagonal) *^ constItem).items)
-        case ConstDiagonalMatrixMatcher(value, width) =>
+        case ConstDiagonalMatrix(value, width) =>
           ConstDiagonalMatrix(constItem * value, width)
         case _ => matrix *^^ self
       }
@@ -511,18 +511,18 @@ trait Matrices extends Vectors { self: LADsl =>
     @OverloadId("matrix")
     def *(matrix: Matrix[T])(implicit n: Numeric[T], o: Overloaded1): Matrix[T] = {
       matrix match {
-        case DenseFlatMatrixMatcher(rmValuesB, width) =>
+        case DenseFlatMatrix(rmValuesB, width) =>
           // TODO: check if there is excessive materialization in @diagonalReplicated
           val diagonalReplicated = diagonalValues.flatMap(v => Collection.replicate(width, v))
           DenseFlatMatrix((DenseVector(rmValuesB) *^ DenseVector(diagonalReplicated)).items, width)
-        case CompoundMatrixMatcher(rowsB, width) =>
+        case CompoundMatrix(rowsB, width) =>
           CompoundMatrix((diagonalValues zip rowsB).map { case Pair(d, v) => v *^ d }, width)
-        case ConstMatrixMatcher(value, width, _) =>
+        case ConstMatrix(value, width, _) =>
           val rowsConstant = diagonalValues.map(v => ConstVector(v * value, width))
           CompoundMatrix(rowsConstant, width)
-        case DiagonalMatrixMatcher(diagonalValues1) =>
+        case DiagonalMatrix(diagonalValues1) =>
           DiagonalMatrix((DenseVector(diagonalValues) *^ DenseVector(diagonalValues1)).items)
-        case ConstDiagonalMatrixMatcher(diagonalValue, _) =>
+        case ConstDiagonalMatrix(diagonalValue, _) =>
           DiagonalMatrix((DenseVector(diagonalValues) *^ diagonalValue).items)
         case _ => !!!("matcher for @matrix argument in DiagonalMatrix.*(matrix: Matrix[T]) is not specified.")
       }
@@ -531,9 +531,9 @@ trait Matrices extends Vectors { self: LADsl =>
     @OverloadId("matrix")
     def +^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = {
       matrix match {
-        case DiagonalMatrixMatcher(diagonalValues1) =>
+        case DiagonalMatrix(diagonalValues1) =>
           DiagonalMatrix((DenseVector(diagonalValues) +^ DenseVector(diagonalValues1)).items)
-        case ConstDiagonalMatrixMatcher(diagonalValue, _) =>
+        case ConstDiagonalMatrix(diagonalValue, _) =>
           DiagonalMatrix((DenseVector(diagonalValues) +^ diagonalValue).items)
         case _ => matrix +^^ self
       }
@@ -542,9 +542,9 @@ trait Matrices extends Vectors { self: LADsl =>
     @OverloadId("matrix")
     def *^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = {
       matrix match {
-        case DiagonalMatrixMatcher(diagonalValues1) =>
+        case DiagonalMatrix(diagonalValues1) =>
           DiagonalMatrix((DenseVector(diagonalValues) *^ DenseVector(diagonalValues1)).items)
-        case ConstDiagonalMatrixMatcher(diagonalValue, _) =>
+        case ConstDiagonalMatrix(diagonalValue, _) =>
           DiagonalMatrix((DenseVector(diagonalValues) *^ diagonalValue).items)
         case _ => matrix *^^ self
       }
@@ -592,15 +592,15 @@ trait Matrices extends Vectors { self: LADsl =>
     @OverloadId("matrix")
     def *(matrix: Matrix[T])(implicit n: Numeric[T], o: Overloaded1): Matrix[T] = {
       matrix match {
-        case DenseFlatMatrixMatcher(rmValuesB, width) =>
+        case DenseFlatMatrix(rmValuesB, width) =>
           DenseFlatMatrix((DenseVector(rmValuesB) *^ constItem).items, width)
-        case CompoundMatrixMatcher(rowsB, width) =>
+        case CompoundMatrix(rowsB, width) =>
           CompoundMatrix(rowsB.map(v => v *^ constItem), width)
-        case ConstMatrixMatcher(value, width, height) =>
+        case ConstMatrix(value, width, height) =>
           ConstMatrix(value * constItem, height, width)
-        case DiagonalMatrixMatcher(diagonalValues1) =>
+        case DiagonalMatrix(diagonalValues1) =>
           DiagonalMatrix((DenseVector(diagonalValues1) *^ constItem).items)
-        case ConstDiagonalMatrixMatcher(diagonalValue, width) =>
+        case ConstDiagonalMatrix(diagonalValue, width) =>
           ConstDiagonalMatrix(constItem * diagonalValue, width)
         case _ => !!!("matcher for @matrix argument in DiagonalMatrix.*(matrix: Matrix[T]) is not specified.")
       }
@@ -609,7 +609,7 @@ trait Matrices extends Vectors { self: LADsl =>
     @OverloadId("matrix")
     def +^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = {
       matrix match {
-        case ConstDiagonalMatrixMatcher(diagonalValue, _) =>
+        case ConstDiagonalMatrix(diagonalValue, _) =>
           ConstDiagonalMatrix(constItem + diagonalValue, numColumns)
         case _ =>
           matrix +^^ self
@@ -619,7 +619,7 @@ trait Matrices extends Vectors { self: LADsl =>
     @OverloadId("matrix")
     def *^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = {
       matrix match {
-        case ConstDiagonalMatrixMatcher(diagonalValue, _) =>
+        case ConstDiagonalMatrix(diagonalValue, _) =>
           ConstDiagonalMatrix(constItem * diagonalValue, numColumns)
         case _ =>
           matrix *^^ self

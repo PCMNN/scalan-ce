@@ -88,13 +88,13 @@ trait Vectors { self: LADsl =>
       def updatedFlatItems = items.updateMany(vector.nonZeroIndices, updates)
       def shiftedFlatItems(cv: Rep[T]) = (self +^ cv).items.updateMany(vector.nonZeroIndices, updates)
       vector match {
-        case DenseVectorMatcher(_) => DenseVector((items zip vector.items).map { case Pair(v1, v2) => v1 + v2 })
-        case ConstVectorMatcher(cv, _) => DenseVector(items.map(v => v + cv))
-        case ZeroVectorMatcher(_) => self
-        case SparseVectorMatcher(_, _, _) => DenseVector(updatedFlatItems)
-        case SparseVectorBoxedMatcher(_, _) => DenseVector(updatedFlatItems)
-        case ShiftVectorMatcher(_, _, cv, _) => DenseVector(shiftedFlatItems(cv))
-        case ShiftVectorBoxedMatcher(_, cv, _) => DenseVector(shiftedFlatItems(cv))
+        case DenseVector(_) => DenseVector((items zip vector.items).map { case Pair(v1, v2) => v1 + v2 })
+        case ConstVector(cv, _) => DenseVector(items.map(v => v + cv))
+        case ZeroVector(_) => self
+        case SparseVector(_, _, _) => DenseVector(updatedFlatItems)
+        case SparseVectorBoxed(_, _) => DenseVector(updatedFlatItems)
+        case ShiftVector(_, _, cv, _) => DenseVector(shiftedFlatItems(cv))
+        case ShiftVectorBoxed(_, cv, _) => DenseVector(shiftedFlatItems(cv))
         case _ => !!!("matcher for @vector argument in DenseVector.+^(vector: Vector[T]) is not specified.")
       }
     }
@@ -103,13 +103,13 @@ trait Vectors { self: LADsl =>
       def updatedFlatItems = items.updateMany(vector.nonZeroIndices, updates)
       def shiftedFlatItems(cv: Rep[T]) = (self +^ cv).items.updateMany(vector.nonZeroIndices, updates)
       vector match {
-        case DenseVectorMatcher(_) => DenseVector((items zip vector.items).map { case Pair(v1, v2) => v1 - v2 })
-        case ConstVectorMatcher(cv, _) => DenseVector(items.map(v => v - cv))
-        case ZeroVectorMatcher(_) => self
-        case SparseVectorMatcher(_, _, _) => DenseVector(updatedFlatItems)
-        case SparseVectorBoxedMatcher(_, _) => DenseVector(updatedFlatItems)
-        case ShiftVectorMatcher(_, _, cv, _) => DenseVector(shiftedFlatItems(cv))
-        case ShiftVectorBoxedMatcher(_, cv, _) => DenseVector(shiftedFlatItems(cv))
+        case DenseVector(_) => DenseVector((items zip vector.items).map { case Pair(v1, v2) => v1 - v2 })
+        case ConstVector(cv, _) => DenseVector(items.map(v => v - cv))
+        case ZeroVector(_) => self
+        case SparseVector(_, _, _) => DenseVector(updatedFlatItems)
+        case SparseVectorBoxed(_, _) => DenseVector(updatedFlatItems)
+        case ShiftVector(_, _, cv, _) => DenseVector(shiftedFlatItems(cv))
+        case ShiftVectorBoxed(_, cv, _) => DenseVector(shiftedFlatItems(cv))
         case _ => !!!("matcher for @vector argument in DenseVector.-^(vector: Vector[T]) is not specified.")
       }
     }
@@ -119,13 +119,13 @@ trait Vectors { self: LADsl =>
       def newItems = (vector.nonZeroItems zip items(is)).map { case Pair(Pair(i, v1), v2) => (i, v1 * v2) }
       def shiftedFlatItems(cv: Rep[T]) = (self *^ cv).items.updateMany(is, newValues)
       vector match {
-        case DenseVectorMatcher(_) => DenseVector((items zip vector.items).map { case Pair(v1, v2) => v1 * v2 })
-        case ConstVectorMatcher(cv, _) => DenseVector(items.map(v => v * cv))
-        case ZeroVectorMatcher(_) => vector
-        case SparseVectorMatcher(_, _, _) => SparseVector(is, newValues, length)
-        case SparseVectorBoxedMatcher(_, _) => SparseVectorBoxed(newItems, length)
-        case ShiftVectorMatcher(_, _, cv, _) => DenseVector(shiftedFlatItems(cv))
-        case ShiftVectorBoxedMatcher(_, cv, _) => DenseVector(shiftedFlatItems(cv))
+        case DenseVector(_) => DenseVector((items zip vector.items).map { case Pair(v1, v2) => v1 * v2 })
+        case ConstVector(cv, _) => DenseVector(items.map(v => v * cv))
+        case ZeroVector(_) => vector
+        case SparseVector(_, _, _) => SparseVector(is, newValues, length)
+        case SparseVectorBoxed(_, _) => SparseVectorBoxed(newItems, length)
+        case ShiftVector(_, _, cv, _) => DenseVector(shiftedFlatItems(cv))
+        case ShiftVectorBoxed(_, cv, _) => DenseVector(shiftedFlatItems(cv))
         case _ => !!!("matcher for @vector argument in DenseVector.*^(vector: Vector[T]) is not specified.")
       }
     }
@@ -135,13 +135,13 @@ trait Vectors { self: LADsl =>
       def updatedFlatItems = (items zip vector.items).map { case Pair(v1, v2) => v1 / v2 }
       def shiftedFlatItems(cv: Rep[T]) = (self /^ cv).items.updateMany(is, updates)
       vector match {
-        case DenseVectorMatcher(_) => DenseVector(updatedFlatItems)
-        case ConstVectorMatcher(value, _) => DenseVector(items.map(v => v / value))
-        case ZeroVectorMatcher(_) => !!!("attempt to divide DenseVector by ZeroVector.")
-        case SparseVectorMatcher(_, _, _) => DenseVector(updatedFlatItems)
-        case SparseVectorBoxedMatcher(_, _) => DenseVector(updatedFlatItems)
-        case ShiftVectorMatcher(_, _, cv, _) => DenseVector(shiftedFlatItems(cv))
-        case ShiftVectorBoxedMatcher(_, cv, _) => DenseVector(shiftedFlatItems(cv))
+        case DenseVector(_) => DenseVector(updatedFlatItems)
+        case ConstVector(value, _) => DenseVector(items.map(v => v / value))
+        case ZeroVector(_) => !!!("attempt to divide DenseVector by ZeroVector.")
+        case SparseVector(_, _, _) => DenseVector(updatedFlatItems)
+        case SparseVectorBoxed(_, _) => DenseVector(updatedFlatItems)
+        case ShiftVector(_, _, cv, _) => DenseVector(shiftedFlatItems(cv))
+        case ShiftVectorBoxed(_, cv, _) => DenseVector(shiftedFlatItems(cv))
         case _ => !!!("matcher for @vector argument in DenseVector.*^(vector: Vector[T]) is not specified.")
       }
     }
@@ -150,10 +150,10 @@ trait Vectors { self: LADsl =>
       def sparse(cv: Rep[T]) = SparseVector(vector.nonZeroIndices, vector.nonZeroValues.map(v => v - cv), length)
       def sparseBoxed(cv: Rep[T]) = SparseVectorBoxed(vector.nonZeroItems.map(v => (v._1, v._2 - cv)), length)
       vector match {
-        case ConstVectorMatcher(cv, _) => self.sum * cv
-        case ZeroVectorMatcher(_) => zero
-        case ShiftVectorMatcher(_, _, cv, _) => (self dot sparse(cv)) + (self dot const(cv))
-        case ShiftVectorBoxedMatcher(_, cv, _) => (self dot sparseBoxed(cv)) + (self dot const(cv))
+        case ConstVector(cv, _) => self.sum * cv
+        case ZeroVector(_) => zero
+        case ShiftVector(_, _, cv, _) => (self dot sparse(cv)) + (self dot const(cv))
+        case ShiftVectorBoxed(_, cv, _) => (self dot sparseBoxed(cv)) + (self dot const(cv))
         case _ => (self *^ vector).sum
       }
     }
@@ -161,11 +161,11 @@ trait Vectors { self: LADsl =>
       def mV = CompoundMatrix(items.map(v => ConstVector(v, matrix.numRows)), matrix.numColumns)
       def standart = (matrix *^^ mV).sumByColumns
       matrix match {
-        case DenseFlatMatrixMatcher(_, _) => standart
-        case CompoundMatrixMatcher(_, _) => standart
-        case ConstMatrixMatcher(value, _, _) => ConstVector(sum * value, length)
-        case DiagonalMatrixMatcher(diagonalValues) => self *^ DenseVector(diagonalValues)
-        case ConstDiagonalMatrixMatcher(diagonalValue, _) => self *^ diagonalValue
+        case DenseFlatMatrix(_, _) => standart
+        case CompoundMatrix(_, _) => standart
+        case ConstMatrix(value, _, _) => ConstVector(sum * value, length)
+        case DiagonalMatrix(diagonalValues) => self *^ DenseVector(diagonalValues)
+        case ConstDiagonalMatrix(diagonalValue, _) => self *^ diagonalValue
         case _ => !!!("matcher for @matrix argument in DenseFlatMatrix.*(matrix: Matrix[T]) is not specified.")
       }
     }
@@ -207,11 +207,11 @@ trait Vectors { self: LADsl =>
         def newValues = vector.nonZeroValues.map(v => v + const)
         def newItems = vector.nonZeroItems.map { case Pair(i, v) => (i, v + const) }
         vector match {
-          case ConstVectorMatcher(cv, _) => ConstVector(const + cv, length)
-          case SparseVectorMatcher(is, _, _) => ShiftVector(is, newValues, const, length)
-          case SparseVectorBoxedMatcher(_, _) => ShiftVectorBoxed(newItems, const, length)
-          case ShiftVectorMatcher(is, _, cv, _) => ShiftVector(is, newValues, const + cv, length)
-          case ShiftVectorBoxedMatcher(_, cv, _) => ShiftVectorBoxed(newItems, const + cv, length)
+          case ConstVector(cv, _) => ConstVector(const + cv, length)
+          case SparseVector(is, _, _) => ShiftVector(is, newValues, const, length)
+          case SparseVectorBoxed(_, _) => ShiftVectorBoxed(newItems, const, length)
+          case ShiftVector(is, _, cv, _) => ShiftVector(is, newValues, const + cv, length)
+          case ShiftVectorBoxed(_, cv, _) => ShiftVectorBoxed(newItems, const + cv, length)
           case _ => vector +^ self
         }
       }
@@ -219,13 +219,13 @@ trait Vectors { self: LADsl =>
         def newValues = vector.nonZeroValues.map(v => const - v)
         def newItems = vector.nonZeroItems.map { case Pair(i, v) => (i, const - v) }
         vector match {
-          case DenseVectorMatcher(vs) => DenseVector(vs.map(v => const - v))
-          case ConstVectorMatcher(cv, _) => ConstVector(const - cv, length)
-          case ZeroVectorMatcher(_) => self
-          case SparseVectorMatcher(is, _, _) => ShiftVector(is, newValues, const, length)
-          case SparseVectorBoxedMatcher(_, _) => ShiftVectorBoxed(newItems, const, length)
-          case ShiftVectorMatcher(is, _, cv, _) => ShiftVector(is, newValues, const - cv, length)
-          case ShiftVectorBoxedMatcher(_, cv, _) => ShiftVectorBoxed(newItems, const - cv, length)
+          case DenseVector(vs) => DenseVector(vs.map(v => const - v))
+          case ConstVector(cv, _) => ConstVector(const - cv, length)
+          case ZeroVector(_) => self
+          case SparseVector(is, _, _) => ShiftVector(is, newValues, const, length)
+          case SparseVectorBoxed(_, _) => ShiftVectorBoxed(newItems, const, length)
+          case ShiftVector(is, _, cv, _) => ShiftVector(is, newValues, const - cv, length)
+          case ShiftVectorBoxed(_, cv, _) => ShiftVectorBoxed(newItems, const - cv, length)
           case _ => !!!("matcher for @vector argument in ConstVector.-^(vector: Vector[T]) is not specified.")
         }
       }
@@ -233,12 +233,12 @@ trait Vectors { self: LADsl =>
         def newValues = vector.nonZeroValues.map(v => v * const)
         def newItems = vector.nonZeroItems.map { case Pair(i, v) => (i, v * const) }
         vector match {
-          case ConstVectorMatcher(cv, _) => ConstVector(const * cv, length)
-          case ZeroVectorMatcher(_) => vector
-          case SparseVectorMatcher(is, _, _) => SparseVector(is, newValues, length)
-          case SparseVectorBoxedMatcher(_, _) => SparseVectorBoxed(newItems, length)
-          case ShiftVectorMatcher(is, _, cv, _) => ShiftVector(is, newValues, const * cv, length)
-          case ShiftVectorBoxedMatcher(_, cv, _) => ShiftVectorBoxed(newItems, const * cv, length)
+          case ConstVector(cv, _) => ConstVector(const * cv, length)
+          case ZeroVector(_) => vector
+          case SparseVector(is, _, _) => SparseVector(is, newValues, length)
+          case SparseVectorBoxed(_, _) => SparseVectorBoxed(newItems, length)
+          case ShiftVector(is, _, cv, _) => ShiftVector(is, newValues, const * cv, length)
+          case ShiftVectorBoxed(_, cv, _) => ShiftVectorBoxed(newItems, const * cv, length)
           case _ => vector *^ self
         }
       }
@@ -247,20 +247,20 @@ trait Vectors { self: LADsl =>
         def flatItems = vector.items.map(v => const / v)
         def newItems = vector.nonZeroItems.map { case Pair(i, v) => (i, const / v) }
         vector match {
-          case DenseVectorMatcher(_) => DenseVector(flatItems)
-          case ConstVectorMatcher(cv, _) => IF (const === cv) THEN singular ELSE ConstVector(const / cv, length)
-          case ZeroVectorMatcher(_) => IF (const === zero) THEN singular ELSE ConstVector(const / zero, length)
-          case SparseVectorMatcher(_, _, _) => DenseVector(flatItems)
-          case SparseVectorBoxedMatcher(_, _) => DenseVector(flatItems)
-          case ShiftVectorMatcher(is, vs, cv, _) => ShiftVector(is, vs.map(v => const / v), const / cv, length)
-          case ShiftVectorBoxedMatcher(_, cv, _) => ShiftVectorBoxed(newItems, const / cv, length)
+          case DenseVector(_) => DenseVector(flatItems)
+          case ConstVector(cv, _) => IF (const === cv) THEN singular ELSE ConstVector(const / cv, length)
+          case ZeroVector(_) => IF (const === zero) THEN singular ELSE ConstVector(const / zero, length)
+          case SparseVector(_, _, _) => DenseVector(flatItems)
+          case SparseVectorBoxed(_, _) => DenseVector(flatItems)
+          case ShiftVector(is, vs, cv, _) => ShiftVector(is, vs.map(v => const / v), const / cv, length)
+          case ShiftVectorBoxed(_, cv, _) => ShiftVectorBoxed(newItems, const / cv, length)
           case _ => !!!("matcher for @vector argument in ConstVector./^(vector: Vector[T]) is not specified.")
         }
       }
       def dot(vector: Vector[T])(implicit n: Numeric[T]): Rep[T] = {
         vector match {
-          case ConstVectorMatcher(cv, _) => const * cv * length.to[T]
-          case ZeroVectorMatcher(_) => zero
+          case ConstVector(cv, _) => const * cv * length.to[T]
+          case ZeroVector(_) => zero
           case _ => const * vector.sum
         }
       }
@@ -295,12 +295,12 @@ trait Vectors { self: LADsl =>
         def newValues = vector.nonZeroValues.map(v => -v)
         def newItems = vector.nonZeroItems.map { case Pair(i, v) => (i, -v) }
         vector match {
-          case DenseVectorMatcher(vs) => DenseVector(vs.map(v => -v))
-          case ConstVectorMatcher(cv, _) => ConstVector(-cv, length)
-          case SparseVectorMatcher(is, _, _) => SparseVector(is, newValues, length)
-          case SparseVectorBoxedMatcher(_, _) => SparseVectorBoxed(newItems, length)
-          case ShiftVectorMatcher(is, _, cv, _) => ShiftVector(is, newValues, -cv, length)
-          case ShiftVectorBoxedMatcher(_, cv, _) => ShiftVectorBoxed(newItems, -cv, length)
+          case DenseVector(vs) => DenseVector(vs.map(v => -v))
+          case ConstVector(cv, _) => ConstVector(-cv, length)
+          case SparseVector(is, _, _) => SparseVector(is, newValues, length)
+          case SparseVectorBoxed(_, _) => SparseVectorBoxed(newItems, length)
+          case ShiftVector(is, _, cv, _) => ShiftVector(is, newValues, -cv, length)
+          case ShiftVectorBoxed(_, cv, _) => ShiftVectorBoxed(newItems, -cv, length)
           case _ => !!!("matcher for @vector argument in ConstVector.-^(vector: Vector[T]) is not specified.")
         }
       }
@@ -316,12 +316,12 @@ trait Vectors { self: LADsl =>
         def shiftOrZero = IF (filter1.length > toRep(0)) THEN shift ELSE singular
         def sparseOrZero = IF (filter0.length > toRep(0)) THEN sparse ELSE self
         vector match {
-          case ZeroVectorMatcher(_) => singular
-          case ConstVectorMatcher(cv, _) => IF (cv === zero) THEN singular ELSE self
-          case SparseVectorMatcher(_, _, _) => shiftOrZero
-          case SparseVectorBoxedMatcher(_, _) => shiftOrZero
-          case ShiftVectorMatcher(_, _, cv, _) => IF (cv === zero) THEN shiftOrZero ELSE sparseOrZero
-          case ShiftVectorBoxedMatcher(_, cv, _) => IF (cv === zero) THEN shiftOrZero ELSE sparseOrZero
+          case ZeroVector(_) => singular
+          case ConstVector(cv, _) => IF (cv === zero) THEN singular ELSE self
+          case SparseVector(_, _, _) => shiftOrZero
+          case SparseVectorBoxed(_, _) => shiftOrZero
+          case ShiftVector(_, _, cv, _) => IF (cv === zero) THEN shiftOrZero ELSE sparseOrZero
+          case ShiftVectorBoxed(_, cv, _) => IF (cv === zero) THEN shiftOrZero ELSE sparseOrZero
           case _ => self
         }
       }
@@ -367,10 +367,10 @@ trait Vectors { self: LADsl =>
       def newItems = x1 outerSum x2
       def shiftedItems(cv: Rep[T]) = (x1 outerSum x2.map(v => (v._1, v._2 - cv))).map(v => (v._1, v._2 + cv))
       vector match {
-        case SparseVectorMatcher(_, _, _) => SparseVectorBoxed(newItems, length)
-        case SparseVectorBoxedMatcher(_, _) => SparseVectorBoxed(newItems, length)
-        case ShiftVectorMatcher(_, _, cv, _) => ShiftVectorBoxed(shiftedItems(cv), cv, length)
-        case ShiftVectorBoxedMatcher(_, cv, _) => ShiftVectorBoxed(shiftedItems(cv), cv, length)
+        case SparseVector(_, _, _) => SparseVectorBoxed(newItems, length)
+        case SparseVectorBoxed(_, _) => SparseVectorBoxed(newItems, length)
+        case ShiftVector(_, _, cv, _) => ShiftVectorBoxed(shiftedItems(cv), cv, length)
+        case ShiftVectorBoxed(_, cv, _) => ShiftVectorBoxed(shiftedItems(cv), cv, length)
         case _ => vector +^ self
       }
     }
@@ -379,13 +379,13 @@ trait Vectors { self: LADsl =>
       def newItems = x1 outerSubtr x2
       def shiftedItems(cv: Rep[T]) = (x1 outerSubtr x2.map(v => (v._1, v._2 - cv))).map(v => (v._1, v._2 - cv))
       vector match {
-        case DenseVectorMatcher(vs2) => DenseVector(vs2.map(-_).updateMany(is, (vs zip vs2(is)).map(v => v._1 - v._2)))
-        case ConstVectorMatcher(cv, _) => ShiftVector(is, vs.map(v => v - cv), -cv, length)
-        case ZeroVectorMatcher(_) => self
-        case SparseVectorMatcher(_, _, _) => SparseVectorBoxed(newItems, length)
-        case SparseVectorBoxedMatcher(_, _) => SparseVectorBoxed(newItems, length)
-        case ShiftVectorMatcher(_, _, cv, _) => ShiftVectorBoxed(shiftedItems(cv), -cv, length)
-        case ShiftVectorBoxedMatcher(_, cv, _) => ShiftVectorBoxed(shiftedItems(cv), -cv, length)
+        case DenseVector(vs2) => DenseVector(vs2.map(-_).updateMany(is, (vs zip vs2(is)).map(v => v._1 - v._2)))
+        case ConstVector(cv, _) => ShiftVector(is, vs.map(v => v - cv), -cv, length)
+        case ZeroVector(_) => self
+        case SparseVector(_, _, _) => SparseVectorBoxed(newItems, length)
+        case SparseVectorBoxed(_, _) => SparseVectorBoxed(newItems, length)
+        case ShiftVector(_, _, cv, _) => ShiftVectorBoxed(shiftedItems(cv), -cv, length)
+        case ShiftVectorBoxed(_, cv, _) => ShiftVectorBoxed(shiftedItems(cv), -cv, length)
         case _ => !!!("matcher for @vector argument in SparseVector.-^(vector: Vector[T]) is not specified.")
       }
     }
@@ -394,10 +394,10 @@ trait Vectors { self: LADsl =>
       def newItems = x1 innerMult x2
       def shiftedItems = (x1 innerMult x2.map(v => (v._1, v._2 - c2))) outerSum x1.map(v => (v._1, v._2 * c2))
       vector match {
-        case SparseVectorMatcher(_, _, _) => SparseVector(newItems.as, newItems.bs, length)
-        case SparseVectorBoxedMatcher(_, _) => SparseVectorBoxed(newItems, length)
-        case ShiftVectorMatcher(_, _, _, _) => ShiftVector(shiftedItems.as, shiftedItems.bs, constItem * c2, length)
-        case ShiftVectorBoxedMatcher(_, _, _) => ShiftVectorBoxed(shiftedItems, constItem * c2, length)
+        case SparseVector(_, _, _) => SparseVector(newItems.as, newItems.bs, length)
+        case SparseVectorBoxed(_, _) => SparseVectorBoxed(newItems, length)
+        case ShiftVector(_, _, _, _) => ShiftVector(shiftedItems.as, shiftedItems.bs, constItem * c2, length)
+        case ShiftVectorBoxed(_, _, _) => ShiftVectorBoxed(shiftedItems, constItem * c2, length)
         case _ => vector *^ self
       }
     }
@@ -406,13 +406,13 @@ trait Vectors { self: LADsl =>
       def newValues = (vs zip vector.items(is)).map { case Pair(v1, v2) => v1 / v2 }
       // TODO: ShiftVectors can be more optimal in this case
       vector match {
-        case DenseVectorMatcher(_) => SparseVector(is, newValues, length)
-        case ConstVectorMatcher(cv, _) => SparseVector(is, vs.map(v => v / cv), length)
-        case ZeroVectorMatcher(_) => !!!("attempt to divide SparseVector by ZeroVector.")
-        case SparseVectorMatcher(_, _, _) => SparseVector(is, newValues, length)
-        case SparseVectorBoxedMatcher(_, _) => SparseVector(is, newValues, length)
-        case ShiftVectorMatcher(_, _, _, _) => SparseVector(is, newValues, length)
-        case ShiftVectorBoxedMatcher(_, _, _) => SparseVector(is, newValues, length)
+        case DenseVector(_) => SparseVector(is, newValues, length)
+        case ConstVector(cv, _) => SparseVector(is, vs.map(v => v / cv), length)
+        case ZeroVector(_) => !!!("attempt to divide SparseVector by ZeroVector.")
+        case SparseVector(_, _, _) => SparseVector(is, newValues, length)
+        case SparseVectorBoxed(_, _) => SparseVector(is, newValues, length)
+        case ShiftVector(_, _, _, _) => SparseVector(is, newValues, length)
+        case ShiftVectorBoxed(_, _, _) => SparseVector(is, newValues, length)
         case _ => !!!("matcher for @vector argument in SparseVector./^(vector: Vector[T]) is not specified.")
       }
     }
@@ -421,10 +421,10 @@ trait Vectors { self: LADsl =>
       def sparse = SparseVector(vector.nonZeroIndices, vector.nonZeroValues.map(v => v - cv), vector.length)
       def sparseBoxed = SparseVectorBoxed(vector.nonZeroItems.map(v => (v._1, v._2 - cv)), vector.length)
       vector match {
-        case SparseVectorMatcher(_, _, _) => standart
-        case SparseVectorBoxedMatcher(_, _) => standart
-        case ShiftVectorMatcher(_, _, cv, _) => (self dot sparse) + self.sum * cv
-        case ShiftVectorBoxedMatcher(_, cv, _) => (self dot sparseBoxed) + self.sum * cv
+        case SparseVector(_, _, _) => standart
+        case SparseVectorBoxed(_, _) => standart
+        case ShiftVector(_, _, cv, _) => (self dot sparse) + self.sum * cv
+        case ShiftVectorBoxed(_, cv, _) => (self dot sparseBoxed) + self.sum * cv
         case _ => vector dot self
       }
     }
@@ -432,11 +432,11 @@ trait Vectors { self: LADsl =>
       def mV = CompoundMatrix(nonZeroValues.map(v => ConstVector(v, matrix.numRows)), matrix.numColumns)
       def standart: Vector[T] = (matrix(nonZeroIndices) *^^ mV).sumByColumns
       matrix match {
-        case DenseFlatMatrixMatcher(_, _) => standart
-        case CompoundMatrixMatcher(_, _) => standart
-        case ConstMatrixMatcher(value, _, _) => ConstVector(sum * value, length)
-        case DiagonalMatrixMatcher(diagonalValues) => self *^ DenseVector(diagonalValues)
-        case ConstDiagonalMatrixMatcher(diagonalValue, _) => self *^ diagonalValue
+        case DenseFlatMatrix(_, _) => standart
+        case CompoundMatrix(_, _) => standart
+        case ConstMatrix(value, _, _) => ConstVector(sum * value, length)
+        case DiagonalMatrix(diagonalValues) => self *^ DenseVector(diagonalValues)
+        case ConstDiagonalMatrix(diagonalValue, _) => self *^ diagonalValue
         case _ => !!!("matcher for @matrix argument in DenseFlatMatrix.*(matrix: Matrix[T]) is not specified.")
       }
     }
@@ -478,9 +478,9 @@ trait Vectors { self: LADsl =>
       lazy val (x1, x2) = (nonZeroItems, vector.nonZeroItems)
       def shiftedItems(cv: Rep[T]) = (x1 outerSum x2.map(v => (v._1, v._2 - cv))).map(v => (v._1, v._2 + cv))
       vector match {
-        case SparseVectorBoxedMatcher(_, _) => SparseVectorBoxed(x1 outerSum x2, length)
-        case ShiftVectorMatcher(_, _, cv, _) => ShiftVectorBoxed(shiftedItems(cv), cv, length)
-        case ShiftVectorBoxedMatcher(_, cv, _) => ShiftVectorBoxed(shiftedItems(cv), cv, length)
+        case SparseVectorBoxed(_, _) => SparseVectorBoxed(x1 outerSum x2, length)
+        case ShiftVector(_, _, cv, _) => ShiftVectorBoxed(shiftedItems(cv), cv, length)
+        case ShiftVectorBoxed(_, cv, _) => ShiftVectorBoxed(shiftedItems(cv), cv, length)
         case _ => vector +^ self
       }
     }
@@ -491,13 +491,13 @@ trait Vectors { self: LADsl =>
       def shiftedItems(cv: Rep[T]) = x1 outerSubtr x2.map(v => (v._1, v._2 - cv))
       def shift(cv: Rep[T]): Vector[T] = SparseVectorBoxed(shiftedItems(cv), length) - ConstVector(cv, length)
       vector match {
-        case DenseVectorMatcher(vs2) => DenseVector(vs2.map(-_).updateMany(is, (vs zip vs2(is)).map(v => v._1 - v._2)))
-        case ConstVectorMatcher(cv, _) => ShiftVectorBoxed(x1.map(v => (v._1, v._2 - cv)), -cv, length)
-        case ZeroVectorMatcher(_) => self
-        case SparseVectorMatcher(_, _, _) => SparseVectorBoxed(newItems, length)
-        case SparseVectorBoxedMatcher(_, _) => SparseVectorBoxed(newItems, length)
-        case ShiftVectorMatcher(_, _, cv, _) => shift(cv)
-        case ShiftVectorBoxedMatcher(_, cv, _) => shift(cv)
+        case DenseVector(vs2) => DenseVector(vs2.map(-_).updateMany(is, (vs zip vs2(is)).map(v => v._1 - v._2)))
+        case ConstVector(cv, _) => ShiftVectorBoxed(x1.map(v => (v._1, v._2 - cv)), -cv, length)
+        case ZeroVector(_) => self
+        case SparseVector(_, _, _) => SparseVectorBoxed(newItems, length)
+        case SparseVectorBoxed(_, _) => SparseVectorBoxed(newItems, length)
+        case ShiftVector(_, _, cv, _) => shift(cv)
+        case ShiftVectorBoxed(_, cv, _) => shift(cv)
         case _ => !!!("matcher for @vector argument in SparseVector.-^(vector: Vector[T]) is not specified.")
       }
     }
@@ -506,10 +506,10 @@ trait Vectors { self: LADsl =>
       def newItems = x1 innerMult x2
       def shiftedItems(cv: Rep[T]) = (x1 innerMult x2.map(v => (v._1, v._2 - cv))) outerSum x1.map(v => (v._1, v._2 * cv))
       vector match {
-        case SparseVectorMatcher(_, _, _) => SparseVectorBoxed(newItems, length)
-        case SparseVectorBoxedMatcher(_, _) => SparseVectorBoxed(newItems, length)
-        case ShiftVectorMatcher(_, _, cv, _) => SparseVectorBoxed(shiftedItems(cv), length)
-        case ShiftVectorBoxedMatcher(_, cv, _) => SparseVectorBoxed(shiftedItems(cv), length)
+        case SparseVector(_, _, _) => SparseVectorBoxed(newItems, length)
+        case SparseVectorBoxed(_, _) => SparseVectorBoxed(newItems, length)
+        case ShiftVector(_, _, cv, _) => SparseVectorBoxed(shiftedItems(cv), length)
+        case ShiftVectorBoxed(_, cv, _) => SparseVectorBoxed(shiftedItems(cv), length)
         case _ => vector *^ self
       }
     }
@@ -518,13 +518,13 @@ trait Vectors { self: LADsl =>
       def newValues = (vs zip vector.items(is)).map { case Pair(v1, v2) => v1 / v2 }
       // TODO: ShiftVectors can be more optimal in this case
       vector match {
-        case DenseVectorMatcher(_) => SparseVector(is, newValues, length)
-        case ConstVectorMatcher(cv, _) => SparseVector(is, vs.map(v => v / cv), length)
-        case ZeroVectorMatcher(_) => !!!("attempt to divide SparseVectorBoxed by ZeroVector.")
-        case SparseVectorMatcher(_, _, _) => SparseVector(is, newValues, length)
-        case SparseVectorBoxedMatcher(_, _) => SparseVector(is, newValues, length)
-        case ShiftVectorMatcher(_, _, cv, _) => SparseVector(is, newValues, length)
-        case ShiftVectorBoxedMatcher(_, cv, _) => SparseVector(is, newValues, length)
+        case DenseVector(_) => SparseVector(is, newValues, length)
+        case ConstVector(cv, _) => SparseVector(is, vs.map(v => v / cv), length)
+        case ZeroVector(_) => !!!("attempt to divide SparseVectorBoxed by ZeroVector.")
+        case SparseVector(_, _, _) => SparseVector(is, newValues, length)
+        case SparseVectorBoxed(_, _) => SparseVector(is, newValues, length)
+        case ShiftVector(_, _, cv, _) => SparseVector(is, newValues, length)
+        case ShiftVectorBoxed(_, cv, _) => SparseVector(is, newValues, length)
         case _ => !!!("matcher for @vector argument in SparseVector./^(vector: Vector[T]) is not specified.")
       }
     }
@@ -533,10 +533,10 @@ trait Vectors { self: LADsl =>
       def sparse = SparseVector(vector.nonZeroIndices, vector.nonZeroValues.map(v => v - c2), len)
       def sparseBoxed = SparseVectorBoxed(vector.nonZeroItems.map(v => (v._1, v._2 - c2)), len)
       vector match {
-        case SparseVectorMatcher(_, _, _) => (self *^ vector).nonZeroValues.reduce
-        case SparseVectorBoxedMatcher(_, _) => (self *^ vector).nonZeroValues.reduce
-        case ShiftVectorMatcher(_, _, _, _) => (self dot sparse) + sum * c2
-        case ShiftVectorBoxedMatcher(_, _, _) => (self dot sparseBoxed) + sum * c2
+        case SparseVector(_, _, _) => (self *^ vector).nonZeroValues.reduce
+        case SparseVectorBoxed(_, _) => (self *^ vector).nonZeroValues.reduce
+        case ShiftVector(_, _, _, _) => (self dot sparse) + sum * c2
+        case ShiftVectorBoxed(_, _, _) => (self dot sparseBoxed) + sum * c2
         case _ => vector dot self
       }
     }
@@ -582,8 +582,8 @@ trait Vectors { self: LADsl =>
       def x2(cv: Rep[T]) = vector.nonZeroItems.map(v => (v._1, v._2 - cv))
       def shiftedItems(cv: Rep[T]) = (x1 outerSum x2(cv)).map(v => (v._1, v._2 + constItem + cv))
       vector match {
-        case ShiftVectorMatcher(_, _, cv, _) => ShiftVectorBoxed(shiftedItems(cv), constItem + cv, length)
-        case ShiftVectorBoxedMatcher(_, cv, _) => ShiftVectorBoxed(shiftedItems(cv), constItem + cv, length)
+        case ShiftVector(_, _, cv, _) => ShiftVectorBoxed(shiftedItems(cv), constItem + cv, length)
+        case ShiftVectorBoxed(_, cv, _) => ShiftVectorBoxed(shiftedItems(cv), constItem + cv, length)
         case _ => vector +^ self
       }
     }
@@ -595,13 +595,13 @@ trait Vectors { self: LADsl =>
       def newItems = (x1 outerSubtr x2c).map(v => (v._1, v._2 + c1))
       def shiftedItems(cv: Rep[T]) = (x1 outerSubtr x2).map(v => (v._1, v._2 + c1 - cv))
       vector match {
-        case DenseVectorMatcher(_) => DenseVector(vector.items.map(v => c1 - v).updateMany(nonZeroIndices, updates))
-        case ConstVectorMatcher(cv, _) => ShiftVector(nonZeroIndices, nonZeroValues.map(v => v - cv), c1 - cv, length)
-        case ZeroVectorMatcher(_) => self
-        case SparseVectorMatcher(_, _, _) => ShiftVectorBoxed(newItems, c1, length)
-        case SparseVectorBoxedMatcher(_, _) => ShiftVectorBoxed(newItems, c1, length)
-        case ShiftVectorMatcher(_, _, cv, _) => ShiftVectorBoxed(shiftedItems(cv), c1 - cv, length)
-        case ShiftVectorBoxedMatcher(_, cv, _) => ShiftVectorBoxed(shiftedItems(cv), c1 - cv, length)
+        case DenseVector(_) => DenseVector(vector.items.map(v => c1 - v).updateMany(nonZeroIndices, updates))
+        case ConstVector(cv, _) => ShiftVector(nonZeroIndices, nonZeroValues.map(v => v - cv), c1 - cv, length)
+        case ZeroVector(_) => self
+        case SparseVector(_, _, _) => ShiftVectorBoxed(newItems, c1, length)
+        case SparseVectorBoxed(_, _) => ShiftVectorBoxed(newItems, c1, length)
+        case ShiftVector(_, _, cv, _) => ShiftVectorBoxed(shiftedItems(cv), c1 - cv, length)
+        case ShiftVectorBoxed(_, cv, _) => ShiftVectorBoxed(shiftedItems(cv), c1 - cv, length)
         case _ => !!!("matcher for @vector argument in ShiftVector.-^(vector: Vector[T]) is not specified.")
       }
     }
@@ -612,8 +612,8 @@ trait Vectors { self: LADsl =>
       lazy val (x1_c2, x2_c1) = (x1.map(v => (v._1, v._2 * c2)), x2.map(v => (v._1, v._2 * c1)))
       def shiftedItems(cv: Rep[T]) = ((x1 innerMult x2) outerSum x1_c2 outerSum x2_c1).map(v => (v._1, v._2 + c1 * cv))
       vector match {
-        case ShiftVectorMatcher(_, _, cv, _) => ShiftVectorBoxed(shiftedItems(cv), c1 * cv, length)
-        case ShiftVectorBoxedMatcher(_, cv, _) => ShiftVectorBoxed(shiftedItems(cv), c1 * cv, length)
+        case ShiftVector(_, _, cv, _) => ShiftVectorBoxed(shiftedItems(cv), c1 * cv, length)
+        case ShiftVectorBoxed(_, cv, _) => ShiftVectorBoxed(shiftedItems(cv), c1 * cv, length)
         case _ => vector *^ self
       }
     }
@@ -622,13 +622,13 @@ trait Vectors { self: LADsl =>
       def updates = (vs zip vector.items(is)).map { case Pair(v1, v2) => v1 / v2 }
       def shiftedItems = vector.items.map(v => c1 / v).updateMany(is, updates)
       vector match {
-        case DenseVectorMatcher(_) => DenseVector(shiftedItems)
-        case ConstVectorMatcher(c2, _) => ShiftVector(is, vs.map(v => v / c2), c1 / c2, length)
-        case ZeroVectorMatcher(_) => !!!("attempt to divide ShiftVector by ZeroVector.")
-        case SparseVectorMatcher(_, _, _) => DenseVector(shiftedItems)
-        case SparseVectorBoxedMatcher(_, _) => DenseVector(shiftedItems)
-        case ShiftVectorMatcher(_, _, _, _) => DenseVector(shiftedItems)
-        case ShiftVectorBoxedMatcher(_, _, _) => DenseVector(shiftedItems)
+        case DenseVector(_) => DenseVector(shiftedItems)
+        case ConstVector(c2, _) => ShiftVector(is, vs.map(v => v / c2), c1 / c2, length)
+        case ZeroVector(_) => !!!("attempt to divide ShiftVector by ZeroVector.")
+        case SparseVector(_, _, _) => DenseVector(shiftedItems)
+        case SparseVectorBoxed(_, _) => DenseVector(shiftedItems)
+        case ShiftVector(_, _, _, _) => DenseVector(shiftedItems)
+        case ShiftVectorBoxed(_, _, _) => DenseVector(shiftedItems)
         case _ => !!!("matcher for @vector argument in ShiftVector./^(vector: Vector[T]) is not specified.")
       }
     }
@@ -636,8 +636,8 @@ trait Vectors { self: LADsl =>
       def sparseBoxed(cv: Rep[T]) = SparseVectorBoxed(vector.nonZeroItems.map(v => (v._1, v._2 - cv)), vector.length)
       def shift(cv: Rep[T]) = self.sum * cv
       vector match {
-        case ShiftVectorMatcher(is, vs, cv, l) => (self dot SparseVector(is, vs.map(v => v - cv), l)) + shift(cv)
-        case ShiftVectorBoxedMatcher(_, cv, _) => (self dot sparseBoxed(cv)) + shift(cv)
+        case ShiftVector(is, vs, cv, l) => (self dot SparseVector(is, vs.map(v => v - cv), l)) + shift(cv)
+        case ShiftVectorBoxed(_, cv, _) => (self dot sparseBoxed(cv)) + shift(cv)
         case _ => vector dot self
       }
     }
@@ -682,7 +682,7 @@ trait Vectors { self: LADsl =>
       def x2(cv: Rep[T]) = vector.nonZeroItems.map(v => (v._1, v._2 - cv))
       def shiftedItems(cv: Rep[T]) = (x1 outerSum x2(cv)).map(v => (v._1, v._2 + offset + cv))
       vector match {
-        case ShiftVectorBoxedMatcher(_, cv, _) => ShiftVectorBoxed(shiftedItems(cv), offset + cv, length)
+        case ShiftVectorBoxed(_, cv, _) => ShiftVectorBoxed(shiftedItems(cv), offset + cv, length)
         case _ => vector +^ self
       }
     }
@@ -694,13 +694,13 @@ trait Vectors { self: LADsl =>
       def newItems = (x1 outerSubtr vector.nonZeroItems).map(v => (v._1, v._2 + c1))
       def shiftedItems(cv: Rep[T]) = (x1 outerSubtr x2(cv)).map(v => (v._1, v._2 + c1 - cv))
       vector match {
-        case DenseVectorMatcher(vs) => DenseVector(vs.map(v => offset - v).updateMany(nonZeroIndices, updates))
-        case ConstVectorMatcher(cv, _) => ShiftVectorBoxed(nonZeroItems.map(v => (v._1, v._2 - cv)), c1 - cv, length)
-        case ZeroVectorMatcher(_) => self
-        case SparseVectorMatcher(_, _, _) => ShiftVectorBoxed(newItems, c1, length)
-        case SparseVectorBoxedMatcher(_, _) => ShiftVectorBoxed(newItems, c1, length)
-        case ShiftVectorMatcher(_, _, cv, _) => ShiftVectorBoxed(shiftedItems(cv), c1 - cv, length)
-        case ShiftVectorBoxedMatcher(_, cv, _) => ShiftVectorBoxed(shiftedItems(cv), c1 - cv, length)
+        case DenseVector(vs) => DenseVector(vs.map(v => offset - v).updateMany(nonZeroIndices, updates))
+        case ConstVector(cv, _) => ShiftVectorBoxed(nonZeroItems.map(v => (v._1, v._2 - cv)), c1 - cv, length)
+        case ZeroVector(_) => self
+        case SparseVector(_, _, _) => ShiftVectorBoxed(newItems, c1, length)
+        case SparseVectorBoxed(_, _) => ShiftVectorBoxed(newItems, c1, length)
+        case ShiftVector(_, _, cv, _) => ShiftVectorBoxed(shiftedItems(cv), c1 - cv, length)
+        case ShiftVectorBoxed(_, cv, _) => ShiftVectorBoxed(shiftedItems(cv), c1 - cv, length)
         case _ => !!!("matcher for @vector argument in ShiftVectorBoxed.-^(vector: Vector[T]) is not specified.")
       }
     }
@@ -713,7 +713,7 @@ trait Vectors { self: LADsl =>
       def outerItems(cv: Rep[T]) = (x1 innerMult x2(cv)) outerSum x1_c2(cv) outerSum x2_c1(cv)
       def shiftedItems(cv: Rep[T]) = outerItems(cv).map(v => (v._1, v._2 + c1 * cv))
       vector match {
-        case ShiftVectorBoxedMatcher(_, cv, _) => ShiftVectorBoxed(shiftedItems(cv), c1 * cv, length)
+        case ShiftVectorBoxed(_, cv, _) => ShiftVectorBoxed(shiftedItems(cv), c1 * cv, length)
         case _ => vector *^ self
       }
     }
@@ -722,13 +722,13 @@ trait Vectors { self: LADsl =>
       def shiftedItems = vector.items.map(v => offset / v).updateMany(nonZeroIndices, updates)
       def newItems(cv: Rep[T]) = nonZeroItems.map(v => (v._1, v._2 / cv))
       vector match {
-        case DenseVectorMatcher(_) => DenseVector(shiftedItems)
-        case ConstVectorMatcher(cv, _) => ShiftVectorBoxed(newItems, offset / cv, length)
-        case ZeroVectorMatcher(_) => !!!("attempt to divide ShiftVectorBoxed by ZeroVector.")
-        case SparseVectorMatcher(_, _, _) => DenseVector(shiftedItems)
-        case SparseVectorBoxedMatcher(_, _) => DenseVector(shiftedItems)
-        case ShiftVectorMatcher(_, _, _, _) => DenseVector(shiftedItems)
-        case ShiftVectorBoxedMatcher(_, _, _) => DenseVector(shiftedItems)
+        case DenseVector(_) => DenseVector(shiftedItems)
+        case ConstVector(cv, _) => ShiftVectorBoxed(newItems, offset / cv, length)
+        case ZeroVector(_) => !!!("attempt to divide ShiftVectorBoxed by ZeroVector.")
+        case SparseVector(_, _, _) => DenseVector(shiftedItems)
+        case SparseVectorBoxed(_, _) => DenseVector(shiftedItems)
+        case ShiftVector(_, _, _, _) => DenseVector(shiftedItems)
+        case ShiftVectorBoxed(_, _, _) => DenseVector(shiftedItems)
         case _ => !!!("matcher for @vector argument in ShiftVectorBoxed./^(vector: Vector[T]) is not specified.")
       }
     }
@@ -737,7 +737,7 @@ trait Vectors { self: LADsl =>
       def sparseBoxed(cv: Rep[T]) = SparseVectorBoxed(vector.nonZeroItems.map(v => (v._1, v._2 - cv)), len)
       def shift(cv: Rep[T]) = self.sum * cv
       vector match {
-        case ShiftVectorBoxedMatcher(_, _, _) => (self dot sparseBoxed(cv)) + shift(cv)
+        case ShiftVectorBoxed(_, _, _) => (self dot sparseBoxed(cv)) + shift(cv)
         case _ => vector dot self
       }
     }

@@ -1,6 +1,6 @@
 package scalan.linalgebra
 
-import scalan.{ScalanDsl, ScalanDslSeq, ScalanDslExp}
+import scalan.{ScalanDsl, ScalanDslStd, ScalanDslExp}
 
 /**
  * Created by Victor Smirnov on 12/25/15.
@@ -9,7 +9,7 @@ import scalan.{ScalanDsl, ScalanDslSeq, ScalanDslExp}
 trait LADsl extends ScalanDsl
                 with MatricesDsl with VectorsDsl
 
-trait LADslSeq extends ScalanDslSeq
+trait LADslSeq extends ScalanDslStd
                 with LADsl with MatricesDslSeq with VectorsDslSeq
 
 trait LADslExp extends ScalanDslExp

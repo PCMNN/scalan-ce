@@ -153,11 +153,11 @@ trait VectorsAbs extends scalan.ScalanDsl with Vectors {
 
     def apply[T](items: Coll[T])(implicit eT: Elem[T]): Rep[DenseVector[T]] =
       mkDenseVector(items)
-  }
-  object DenseVectorMatcher {
+
     def unapply[T](p: Rep[AbstractVector[T]]) = unmkDenseVector(p)
   }
-  lazy val DenseVector: Rep[DenseVectorCompanionAbs] = new DenseVectorCompanionAbs
+  lazy val DenseVectorRep: Rep[DenseVectorCompanionAbs] = new DenseVectorCompanionAbs
+  lazy val DenseVector: DenseVectorCompanionAbs = proxyDenseVectorCompanion(DenseVectorRep)
   implicit def proxyDenseVectorCompanion(p: Rep[DenseVectorCompanionAbs]): DenseVectorCompanionAbs = {
     proxyOps[DenseVectorCompanionAbs](p)
   }
@@ -238,11 +238,11 @@ trait VectorsAbs extends scalan.ScalanDsl with Vectors {
       isoConstVector(eT).to(p)
     def apply[T](const: Rep[T], length: IntRep)(implicit eT: Elem[T]): Rep[ConstVector[T]] =
       mkConstVector(const, length)
+
+    def unapply[T](p: Rep[ConstantVector[T]]) = unmkConstVector(p)
   }
-  object ConstVectorMatcher {
-    def unapply[T](p: Rep[AbstractVector[T]]) = unmkConstVector(p)
-  }
-  lazy val ConstVector: Rep[ConstVectorCompanionAbs] = new ConstVectorCompanionAbs
+  lazy val ConstVectorRep: Rep[ConstVectorCompanionAbs] = new ConstVectorCompanionAbs
+  lazy val ConstVector: ConstVectorCompanionAbs = proxyConstVectorCompanion(ConstVectorRep)
   implicit def proxyConstVectorCompanion(p: Rep[ConstVectorCompanionAbs]): ConstVectorCompanionAbs = {
     proxyOps[ConstVectorCompanionAbs](p)
   }
@@ -265,7 +265,7 @@ trait VectorsAbs extends scalan.ScalanDsl with Vectors {
 
   // 6) smart constructor and deconstructor
   def mkConstVector[T](const: Rep[T], length: IntRep)(implicit eT: Elem[T]): Rep[ConstVector[T]]
-  def unmkConstVector[T](p: Rep[AbstractVector[T]]): Option[(Rep[T], Rep[Int])]
+  def unmkConstVector[T](p: Rep[ConstantVector[T]]): Option[(Rep[T], Rep[Int])]
 
   abstract class AbsZeroVector[T]
       (length: IntRep)(implicit eT: Elem[T])
@@ -322,11 +322,11 @@ trait VectorsAbs extends scalan.ScalanDsl with Vectors {
 
     def apply[T](length: IntRep)(implicit eT: Elem[T]): Rep[ZeroVector[T]] =
       mkZeroVector(length)
+
+    def unapply[T](p: Rep[ConstantVector[T]]) = unmkZeroVector(p)
   }
-  object ZeroVectorMatcher {
-    def unapply[T](p: Rep[AbstractVector[T]]) = unmkZeroVector(p)
-  }
-  lazy val ZeroVector: Rep[ZeroVectorCompanionAbs] = new ZeroVectorCompanionAbs
+  lazy val ZeroVectorRep: Rep[ZeroVectorCompanionAbs] = new ZeroVectorCompanionAbs
+  lazy val ZeroVector: ZeroVectorCompanionAbs = proxyZeroVectorCompanion(ZeroVectorRep)
   implicit def proxyZeroVectorCompanion(p: Rep[ZeroVectorCompanionAbs]): ZeroVectorCompanionAbs = {
     proxyOps[ZeroVectorCompanionAbs](p)
   }
@@ -349,7 +349,7 @@ trait VectorsAbs extends scalan.ScalanDsl with Vectors {
 
   // 6) smart constructor and deconstructor
   def mkZeroVector[T](length: IntRep)(implicit eT: Elem[T]): Rep[ZeroVector[T]]
-  def unmkZeroVector[T](p: Rep[AbstractVector[T]]): Option[(Rep[Int])]
+  def unmkZeroVector[T](p: Rep[ConstantVector[T]]): Option[(Rep[Int])]
 
   abstract class AbsSparseVector[T]
       (nonZeroIndices: Coll[Int], nonZeroValues: Coll[T], length: IntRep)(implicit eT: Elem[T])
@@ -407,11 +407,11 @@ trait VectorsAbs extends scalan.ScalanDsl with Vectors {
       isoSparseVector(eT).to(p)
     def apply[T](nonZeroIndices: Coll[Int], nonZeroValues: Coll[T], length: IntRep)(implicit eT: Elem[T]): Rep[SparseVector[T]] =
       mkSparseVector(nonZeroIndices, nonZeroValues, length)
-  }
-  object SparseVectorMatcher {
+
     def unapply[T](p: Rep[AbstractVector[T]]) = unmkSparseVector(p)
   }
-  lazy val SparseVector: Rep[SparseVectorCompanionAbs] = new SparseVectorCompanionAbs
+  lazy val SparseVectorRep: Rep[SparseVectorCompanionAbs] = new SparseVectorCompanionAbs
+  lazy val SparseVector: SparseVectorCompanionAbs = proxySparseVectorCompanion(SparseVectorRep)
   implicit def proxySparseVectorCompanion(p: Rep[SparseVectorCompanionAbs]): SparseVectorCompanionAbs = {
     proxyOps[SparseVectorCompanionAbs](p)
   }
@@ -492,11 +492,11 @@ trait VectorsAbs extends scalan.ScalanDsl with Vectors {
       isoSparseVectorBoxed(eT).to(p)
     def apply[T](nonZeroItems: Coll[(Int, T)], length: IntRep)(implicit eT: Elem[T]): Rep[SparseVectorBoxed[T]] =
       mkSparseVectorBoxed(nonZeroItems, length)
-  }
-  object SparseVectorBoxedMatcher {
+
     def unapply[T](p: Rep[AbstractVector[T]]) = unmkSparseVectorBoxed(p)
   }
-  lazy val SparseVectorBoxed: Rep[SparseVectorBoxedCompanionAbs] = new SparseVectorBoxedCompanionAbs
+  lazy val SparseVectorBoxedRep: Rep[SparseVectorBoxedCompanionAbs] = new SparseVectorBoxedCompanionAbs
+  lazy val SparseVectorBoxed: SparseVectorBoxedCompanionAbs = proxySparseVectorBoxedCompanion(SparseVectorBoxedRep)
   implicit def proxySparseVectorBoxedCompanion(p: Rep[SparseVectorBoxedCompanionAbs]): SparseVectorBoxedCompanionAbs = {
     proxyOps[SparseVectorBoxedCompanionAbs](p)
   }
@@ -578,11 +578,11 @@ trait VectorsAbs extends scalan.ScalanDsl with Vectors {
       isoShiftVector(eT).to(p)
     def apply[T](nonZeroIndices: Coll[Int], nonZeroValues: Coll[T], constItem: Rep[T], length: IntRep)(implicit eT: Elem[T]): Rep[ShiftVector[T]] =
       mkShiftVector(nonZeroIndices, nonZeroValues, constItem, length)
-  }
-  object ShiftVectorMatcher {
+
     def unapply[T](p: Rep[AbstractVector[T]]) = unmkShiftVector(p)
   }
-  lazy val ShiftVector: Rep[ShiftVectorCompanionAbs] = new ShiftVectorCompanionAbs
+  lazy val ShiftVectorRep: Rep[ShiftVectorCompanionAbs] = new ShiftVectorCompanionAbs
+  lazy val ShiftVector: ShiftVectorCompanionAbs = proxyShiftVectorCompanion(ShiftVectorRep)
   implicit def proxyShiftVectorCompanion(p: Rep[ShiftVectorCompanionAbs]): ShiftVectorCompanionAbs = {
     proxyOps[ShiftVectorCompanionAbs](p)
   }
@@ -664,11 +664,11 @@ trait VectorsAbs extends scalan.ScalanDsl with Vectors {
       isoShiftVectorBoxed(eT).to(p)
     def apply[T](nonZeroItems: Coll[(Int, T)], offset: Rep[T], length: IntRep)(implicit eT: Elem[T]): Rep[ShiftVectorBoxed[T]] =
       mkShiftVectorBoxed(nonZeroItems, offset, length)
-  }
-  object ShiftVectorBoxedMatcher {
+
     def unapply[T](p: Rep[AbstractVector[T]]) = unmkShiftVectorBoxed(p)
   }
-  lazy val ShiftVectorBoxed: Rep[ShiftVectorBoxedCompanionAbs] = new ShiftVectorBoxedCompanionAbs
+  lazy val ShiftVectorBoxedRep: Rep[ShiftVectorBoxedCompanionAbs] = new ShiftVectorBoxedCompanionAbs
+  lazy val ShiftVectorBoxed: ShiftVectorBoxedCompanionAbs = proxyShiftVectorBoxedCompanion(ShiftVectorBoxedRep)
   implicit def proxyShiftVectorBoxedCompanion(p: Rep[ShiftVectorBoxedCompanionAbs]): ShiftVectorBoxedCompanionAbs = {
     proxyOps[ShiftVectorBoxedCompanionAbs](p)
   }
@@ -724,7 +724,7 @@ trait VectorsSeq extends scalan.ScalanDslStd with VectorsDsl {
   def mkConstVector[T]
     (const: Rep[T], length: IntRep)(implicit eT: Elem[T]): Rep[ConstVector[T]] =
     new SeqConstVector[T](const, length)
-  def unmkConstVector[T](p: Rep[AbstractVector[T]]) = p match {
+  def unmkConstVector[T](p: Rep[ConstantVector[T]]) = p match {
     case p: ConstVector[T] @unchecked =>
       Some((p.const, p.length))
     case _ => None
@@ -738,7 +738,7 @@ trait VectorsSeq extends scalan.ScalanDslStd with VectorsDsl {
   def mkZeroVector[T]
     (length: IntRep)(implicit eT: Elem[T]): Rep[ZeroVector[T]] =
     new SeqZeroVector[T](length)
-  def unmkZeroVector[T](p: Rep[AbstractVector[T]]) = p match {
+  def unmkZeroVector[T](p: Rep[ConstantVector[T]]) = p match {
     case p: ZeroVector[T] @unchecked =>
       Some((p.length))
     case _ => None
@@ -1292,7 +1292,7 @@ trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
   def mkConstVector[T]
     (const: Rep[T], length: IntRep)(implicit eT: Elem[T]): Rep[ConstVector[T]] =
     new ExpConstVector[T](const, length)
-  def unmkConstVector[T](p: Rep[AbstractVector[T]]) = p.elem.asInstanceOf[Elem[_]] match {
+  def unmkConstVector[T](p: Rep[ConstantVector[T]]) = p.elem.asInstanceOf[Elem[_]] match {
     case _: ConstVectorElem[T] @unchecked =>
       Some((p.asRep[ConstVector[T]].const, p.asRep[ConstVector[T]].length))
     case _ =>
@@ -1512,7 +1512,7 @@ trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
   def mkZeroVector[T]
     (length: IntRep)(implicit eT: Elem[T]): Rep[ZeroVector[T]] =
     new ExpZeroVector[T](length)
-  def unmkZeroVector[T](p: Rep[AbstractVector[T]]) = p.elem.asInstanceOf[Elem[_]] match {
+  def unmkZeroVector[T](p: Rep[ConstantVector[T]]) = p.elem.asInstanceOf[Elem[_]] match {
     case _: ZeroVectorElem[T] @unchecked =>
       Some((p.asRep[ZeroVector[T]].length))
     case _ =>
