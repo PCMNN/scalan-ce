@@ -181,7 +181,8 @@ trait Vectors { self: LADsl =>
     def euclideanNorm(implicit n: Numeric[T]): DoubleRep = Math.sqrt(items.map(v => v * v).reduce.toDouble)
   }
 
-  trait ConstantVector[T] extends Vector[T] {
+  // TODO: fix matchers in meta
+  /*trait ConstantVector[T] extends Vector[T] {
 
     implicit def eC: Elem[T]
 
@@ -189,10 +190,10 @@ trait Vectors { self: LADsl =>
 
     def const: Rep[T]
     def length: IntRep
-  }
+  }*/
 
-    abstract class ConstVector[T](val const: Rep[T], val length: IntRep)(implicit val eC: Elem[T])
-      extends ConstantVector[T] {
+    abstract class ConstVector[T](val const: Rep[T], val length: IntRep)(implicit val eT: Elem[T])
+      extends Vector[T] {
 
       def items: Coll[T] = Collection.replicate(length, const)
       def nonZeroIndices: Coll[Int] = IF (const !== zero) THEN Collection.indexRange(length) ELSE Collection.empty[Int]
@@ -278,8 +279,8 @@ trait Vectors { self: LADsl =>
       def euclideanNorm(implicit n: Numeric[T]): DoubleRep = Math.sqrt(items.map(v => v * v).reduce.toDouble)
     }
 
-    abstract class ZeroVector[T](val length: IntRep)(implicit val eC: Elem[T])
-      extends ConstantVector[T] {
+    abstract class ZeroVector[T](val length: IntRep)(implicit val eT: Elem[T])
+      extends Vector[T] {
 
       def const: Rep[T] = zero
 
