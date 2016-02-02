@@ -22,8 +22,8 @@ class LASuite extends BaseShouldTests {
   lazy val len = toRep(3)
   lazy val res = f1(cv, cv)
   def cv = ConstVector(v, len)
-  def f1(v1: Vector[Double], v2: Vector[Double]): DoubleRep = ((v1 +^ v2) -^ (v1 *^ v2) +^ (v1 /^ v2)) dot (v2 /^ v1)
-  def vvm_converters(v1: Vector[Double], v2: Vector[Double], res: DoubleRep, f: (Vector[Double], Vector[Double]) => DoubleRep) = {
+  def f1(v1: Vec[Double], v2: Vec[Double]): DoubleRep = ((v1 +^ v2) -^ (v1 *^ v2) +^ (v1 /^ v2)) dot (v2 /^ v1)
+  def vvm_converters(v1: Vec[Double], v2: Vec[Double], res: DoubleRep, f: (Vec[Double], Vec[Double]) => DoubleRep) = {
     f(v1.convertTo[DenseVector[Double]], v2.convertTo[DenseVector[Double]]) should be(res)
     f(v1.convertTo[DenseVector[Double]], v2.convertTo[ConstVector[Double]]) should be(res)
     f(v1.convertTo[DenseVector[Double]], v2.convertTo[SparseVector[Double]]) should be(res)
@@ -146,5 +146,5 @@ class LASuite extends BaseShouldTests {
 
   }
 
-  "vvm converters" should "be equivalent for all Vector types" ignore vvm_converters(cv, cv, res, f1)
+  "vvm converters" should "be equivalent for all Vec types" ignore vvm_converters(cv, cv, res, f1)
 }

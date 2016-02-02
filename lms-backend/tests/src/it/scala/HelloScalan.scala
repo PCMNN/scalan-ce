@@ -11,8 +11,8 @@ trait HelloScalan extends LADsl {
   lazy val run = fun { p: Rep[(Array[Array[Double]], Array[Double])] =>
     val Pair(m, v) = p
     val width = m(0).length
-    val matrix: Matrix[Double] = CompoundMatrix(Collection(m.map { r: Arr[Double] => DenseVector(Collection(r))}), width)
-    val vector: Vector[Double] = DenseVector(Collection(v))
+    val matrix: Matr[Double] = CompoundMatrix(Collection(m.map { r: Arr[Double] => DenseVector(Collection(r))}), width)
+    val vector: Vec[Double] = DenseVector(Collection(v))
     (matrix * vector).items.arr
   }
   // example input

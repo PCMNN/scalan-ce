@@ -10,42 +10,42 @@ import scala.annotation.unchecked.uncheckedVariance
 
 trait Matrices extends Vectors { self: LADsl =>
 
-  type Matrix[T] = Rep[AbstractMatrix[T]]
+  type Matr[T] = Rep[Matrix[T]]
 
-  trait AbstractMatrix[T] extends Def[AbstractMatrix[T]] {
+  trait Matrix[T] extends Def[Matrix[T]] {
     def numColumns: Rep[Int]
     def numRows: Rep[Int]
     implicit def eT: Elem[T]
-    def rows: Rep[Collection[AbstractVector[T]]]
-    def columns: Rep[Collection[AbstractVector[T]]]
+    def rows: Rep[Collection[Vector[T]]]
+    def columns: Rep[Collection[Vector[T]]]
     def rmValues: Rep[Collection[T]]
     def zeroValue = eT.defaultRepValue
     def constItem: Rep[T]
     def diagonalValues: Rep[Collection[T]]
-    def replicatedRow: Vector[T]
+    def replicatedRow: Vec[T]
 
     @OverloadId("rowsByVector")
-    def apply(vector: Vector[Int])(implicit o: Overloaded2): Matrix[T] = apply(vector.items)
+    def apply(vector: Vec[Int])(implicit o: Overloaded2): Matr[T] = apply(vector.items)
     @OverloadId("rows")
-    def apply(iRows: Coll[Int])(implicit o: Overloaded1): Matrix[T]
+    def apply(iRows: Coll[Int])(implicit o: Overloaded1): Matr[T]
     @OverloadId("row")
-    def apply(row: Rep[Int]): Vector[T]
+    def apply(row: Rep[Int]): Vec[T]
     def apply(row: Rep[Int], column: Rep[Int]): Rep[T]
 
-    //def mapBy[R: Elem](f: Rep[T => R @uncheckedVariance]): Matrix[R]
-    def mapRowsBy[R: Elem](f: Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]): Matrix[R]
+    //def mapBy[R: Elem](f: Rep[T => R @uncheckedVariance]): Matr[R]
+    def mapRowsBy[R: Elem](f: Rep[Vector[T] => Vector[R] @uncheckedVariance]): Matr[R]
 
-    def transpose(implicit n: Numeric[T]): Matrix[T]
+    def transpose(implicit n: Numeric[T]): Matr[T]
     // TODO: implement sumByRows and sumByColumns in specializations.
-    def reduceByRows(implicit m: RepMonoid[T]): Vector[T] = {
+    def reduceByRows(implicit m: RepMonoid[T]): Vec[T] = {
       // TODO: no way it's good, specialize over classes
       DenseVector(rows.map(row => row.nonZeroValues.reduce))
     }
-    def reduceByColumns(implicit m: RepMonoid[T], n: Numeric[T]): Vector[T]
-    def sumByRows(implicit n: Numeric[T]): Vector[T]
-    def sumByColumns(implicit n: Numeric[T]): Vector[T]
+    def reduceByColumns(implicit m: RepMonoid[T], n: Numeric[T]): Vec[T]
+    def sumByRows(implicit n: Numeric[T]): Vec[T]
+    def sumByColumns(implicit n: Numeric[T]): Vec[T]
 
-    def countNonZeroesByColumns(implicit n: Numeric[T]): Vector[Int] = {
+    def countNonZeroesByColumns(implicit n: Numeric[T]): Vec[Int] = {
       /*val zero = elem.defaultRepValue
       lazy val NonZeroesMonoid = RepMonoid[T]("NonZeroesMonoid", 0, false) {
         case (x1, x2) => (x1 !== zero).toInt + (x2 !== zero).toInt
@@ -54,45 +54,45 @@ trait Matrices extends Vectors { self: LADsl =>
       DenseVector(mT.rows.map(row => row.nonZeroIndices.length))
     }
 
-    def +(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = self +^^ matrix
+    def +(matrix: Matr[T])(implicit n: Numeric[T]): Matr[T] = self +^^ matrix
     @OverloadId("matrix")
-    def *(matrix: Matrix[T])(implicit n: Numeric[T], o: Overloaded1): Matrix[T]
-    def *(vector: Vector[T])(implicit n: Numeric[T]): Vector[T] = DenseVector(rows.map(r => r dot vector))
+    def *(matrix: Matr[T])(implicit n: Numeric[T], o: Overloaded1): Matr[T]
+    def *(vector: Vec[T])(implicit n: Numeric[T]): Vec[T] = DenseVector(rows.map(r => r dot vector))
     @OverloadId("matrix")
-    def +^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T]
-    def +^^(value: Rep[T])(implicit n: Numeric[T], o: Overloaded1): Matrix[T] = {
+    def +^^(matrix: Matr[T])(implicit n: Numeric[T]): Matr[T]
+    def +^^(value: Rep[T])(implicit n: Numeric[T], o: Overloaded1): Matr[T] = {
       self +^^ ConstMatrix(value, numColumns, numRows)
     }
     @OverloadId("matrix")
-    def *^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T]
-    def *^^(value: Rep[T])(implicit n: Numeric[T], o: Overloaded1): Matrix[T] = {
+    def *^^(matrix: Matr[T])(implicit n: Numeric[T]): Matr[T]
+    def *^^(value: Rep[T])(implicit n: Numeric[T], o: Overloaded1): Matr[T] = {
       self +^^ ConstMatrix(value, numColumns, numRows)
     }
     def average(implicit f: Fractional[T], m: RepMonoid[T]): Rep[T]
   }
 
   abstract class DenseFlatMatrix[T](val rmValues: Rep[Collection[T]], val numColumns: Rep[Int])
-                                   (implicit val eT: Elem[T]) extends AbstractMatrix[T] {
+                                   (implicit val eT: Elem[T]) extends Matrix[T] {
 
     def items = rmValues
     def constItem = zeroValue
     def numRows: Rep[Int] = rmValues.length /! numColumns
-    def columns: Rep[Collection[AbstractVector[T]]] = {
+    def columns: Rep[Collection[Vector[T]]] = {
       Collection.indexRange(numColumns).map(i => DenseVector(Collection(rmValues.arr.stride(i, numRows, numColumns))))
     }
     def rows: Coll[DenseVector[T]] = Collection(rmValues.arr.grouped(numColumns).map(vs => DenseVector(Collection(vs))))
     def diagonalValues = rmValues(Collection.indexRange(Math.min(numRows, numColumns)).map(i => i * numColumns + i))
-    def replicatedRow: Vector[T] = ConstVector(zeroValue, numColumns) // TODO: create ZeroVector if it's introduced
+    def replicatedRow: Vec[T] = ConstVector(zeroValue, numColumns) // TODO: create ZeroVector if it's introduced
 
     @OverloadId("rows")
-    def apply(iRows: Coll[Int])(implicit o: Overloaded1): Matrix[T] = {
+    def apply(iRows: Coll[Int])(implicit o: Overloaded1): Matr[T] = {
       DenseFlatMatrix(iRows.map(i => items.slice(numColumns * i, numColumns)).flatMap(v => v), numColumns)
     }
     @OverloadId("row")
-    def apply(row: Rep[Int]): Vector[T] = DenseVector(rmValues.slice(row * numColumns, numColumns))
+    def apply(row: Rep[Int]): Vec[T] = DenseVector(rmValues.slice(row * numColumns, numColumns))
     def apply(row: Rep[Int], column: Rep[Int]): Rep[T] = items(toCellIndex(row, column))
 
-    def mapRowsBy[R: Elem](f: Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]): Matrix[R] = {
+    def mapRowsBy[R: Elem](f: Rep[Vector[T] => Vector[R] @uncheckedVariance]): Matr[R] = {
       DenseFlatMatrix.fromRows(rows.mapBy(f), numColumns)
     }
 
@@ -100,19 +100,19 @@ trait Matrices extends Vectors { self: LADsl =>
     def toCellIndex(iRow: Rep[Int], iCol: Rep[Int]): Rep[Int] = numColumns * iRow + iCol
 
     @OverloadId("block_size")
-    def transpose(blockSize: Rep[Int])(implicit n: Numeric[T]): Matrix[T] = {
+    def transpose(blockSize: Rep[Int])(implicit n: Numeric[T]): Matr[T] = {
       DenseFlatMatrix(columns.flatMap(col => col.items), numRows)
     }
-    def transpose(implicit n: Numeric[T]): Matrix[T] = transpose(10)
+    def transpose(implicit n: Numeric[T]): Matr[T] = transpose(10)
 
-    def reduceByColumns(implicit m: RepMonoid[T], n: Numeric[T]): Vector[T] = {
+    def reduceByColumns(implicit m: RepMonoid[T], n: Numeric[T]): Vec[T] = {
       DenseVector(Collection.indexRange(numColumns).map(column => rows.map(row => row(column)).reduce(m)))
     }
-    def sumByRows(implicit n: Numeric[T]): Vector[T] = ???
-    def sumByColumns(implicit n: Numeric[T]): Vector[T] = ???
+    def sumByRows(implicit n: Numeric[T]): Vec[T] = ???
+    def sumByColumns(implicit n: Numeric[T]): Vec[T] = ???
 
     @OverloadId("matrix")
-    def *(matrix: Matrix[T])(implicit n: Numeric[T], o: Overloaded1): Matrix[T] = {
+    def *(matrix: Matr[T])(implicit n: Numeric[T], o: Overloaded1): Matr[T] = {
       def mT = matrix.transpose
       def direct = rows.flatMap { row => (mT * row).items}
       matrix match {
@@ -128,12 +128,12 @@ trait Matrices extends Vectors { self: LADsl =>
           DenseFlatMatrix((DenseVector(rmValues) *^ DenseVector(diagonalReplicated)).items, numColumns)
         case ConstDiagonalMatrix(diagonalValue, _) =>
           DenseFlatMatrix((DenseVector(rmValues) *^ diagonalValue).items, numColumns)
-        case _ => !!!("matcher for @matrix argument in DenseFlatMatrix.*(matrix: Matrix[T]) is not specified.")
+        case _ => !!!("matcher for @matrix argument in DenseFlatMatrix.*(matrix: Matr[T]) is not specified.")
       }
     }
 
     @OverloadId("matrix")
-    def +^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = {
+    def +^^(matrix: Matr[T])(implicit n: Numeric[T]): Matr[T] = {
       matrix match {
         case DenseFlatMatrix(rmValues1, _) =>
           DenseFlatMatrix((DenseVector(rmValues) +^ DenseVector(rmValues1)).items, numColumns)
@@ -150,12 +150,12 @@ trait Matrices extends Vectors { self: LADsl =>
           val mainDiagonalIndices = Collection.indexRange(width).map(i => i * width + i)
           val newValues = rmValues(mainDiagonalIndices).map(v => diagonalValue + v)
           DenseFlatMatrix(rmValues.updateMany(mainDiagonalIndices, newValues), numColumns)
-        case _ => !!!("matcher for @matrix argument in DenseFlatMatrix.+^^(matrix: Matrix[T]) is not specified.")
+        case _ => !!!("matcher for @matrix argument in DenseFlatMatrix.+^^(matrix: Matr[T]) is not specified.")
       }
     }
 
     @OverloadId("matrix")
-    def *^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = {
+    def *^^(matrix: Matr[T])(implicit n: Numeric[T]): Matr[T] = {
       matrix match {
         case DenseFlatMatrix(rmValues1, _) =>
           DenseFlatMatrix((DenseVector(rmValues) *^ DenseVector(rmValues1)).items, numColumns)
@@ -170,7 +170,7 @@ trait Matrices extends Vectors { self: LADsl =>
         case ConstDiagonalMatrix(diagonalValue, width) =>
           val mainDiagonalIndices = Collection.indexRange(width).map(i => i * width + i)
           DiagonalMatrix((DenseVector(rmValues(mainDiagonalIndices)) *^ diagonalValue).items)
-        case _ => !!!("matcher for @matrix argument in DenseFlatMatrix.*^^(matrix: Matrix[T]) is not specified.")
+        case _ => !!!("matcher for @matrix argument in DenseFlatMatrix.*^^(matrix: Matr[T]) is not specified.")
       }
     }
 
@@ -179,8 +179,8 @@ trait Matrices extends Vectors { self: LADsl =>
     }
   }
 /*
-  abstract class ReplicatedMatrix[T](val replicatedRow: Vector[T], val numRows: Rep[Int])
-                                    (implicit val eT: Elem[T]) extends Matrix[T] {
+  abstract class ReplicatedMatrix[T](val replicatedRow: Vec[T], val numRows: Rep[Int])
+                                    (implicit val eT: Elem[T]) extends Matr[T] {
 
     def rows = Collection.replicate(numRows, replicatedRow)
     def columns = Collection.indexRange(numColumns).map(j => ConstVector(replicatedRow(j), numRows))
@@ -194,10 +194,10 @@ trait Matrices extends Vectors { self: LADsl =>
       ReplicatedMatrix(replicatedRow, iRows.length)
     }
     @OverloadId("row")
-    def apply(row: Rep[Int]): Vector[T] = replicatedRow
+    def apply(row: Rep[Int]): Vec[T] = replicatedRow
     def apply(row: Rep[Int], column: Rep[Int]): Rep[T] = replicatedRow(column)
 
-    def mapRowsBy[R: Elem](f: Rep[Vector[T] => Vector[R] @uncheckedVariance]): Matr[R] = {
+    def mapRowsBy[R: Elem](f: Rep[Vec[T] => Vec[R] @uncheckedVariance]): Matr[R] = {
       // no effects supported in lambda @f!
       val resultRows = Collection.singleton(replicatedRow).mapBy(f) // TODO: not the most elegant solution
       ReplicatedMatrix(resultRows(toRep(0)), numRows)
@@ -272,10 +272,10 @@ trait Matrices extends Vectors { self: LADsl =>
     }
   }
 */
-  abstract class CompoundMatrix[T](val rows: Rep[Collection[AbstractVector[T]]], val numColumns: Rep[Int])
-                                  (implicit val eT: Elem[T]) extends AbstractMatrix[T] {
+  abstract class CompoundMatrix[T](val rows: Rep[Collection[Vector[T]]], val numColumns: Rep[Int])
+                                  (implicit val eT: Elem[T]) extends Matrix[T] {
 
-    def columns: Rep[Collection[AbstractVector[T]]] = {
+    def columns: Rep[Collection[Vector[T]]] = {
       // TODO: inefficient
       Collection(SArray.tabulate(numColumns) { j => DenseVector(rows.map(_(j)))})
     }
@@ -286,37 +286,37 @@ trait Matrices extends Vectors { self: LADsl =>
       val width = Math.min(numRows, numColumns)
       Collection.indexRange(width).map(i => rows(i)(i))
     }
-    def replicatedRow: Vector[T] = ConstVector(zeroValue, numColumns) // TODO: create ZeroVector if it's introduced
+    def replicatedRow: Vec[T] = ConstVector(zeroValue, numColumns) // TODO: create ZeroVector if it's introduced
 
     @OverloadId("rows") 
-    def apply(iRows: Coll[Int])(implicit o: Overloaded1): Matrix[T] = {
+    def apply(iRows: Coll[Int])(implicit o: Overloaded1): Matr[T] = {
       CompoundMatrix(iRows.map(i => rows(i)), numColumns)
     }
     @OverloadId("row")
-    def apply(row: Rep[Int]): Vector[T] = rows(row)
+    def apply(row: Rep[Int]): Vec[T] = rows(row)
     def apply(row: Rep[Int], column: Rep[Int]): Rep[T] = apply(row)(column)
 
-    def mapRowsBy[R: Elem](f: Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]): Matrix[R] = {
+    def mapRowsBy[R: Elem](f: Rep[Vector[T] => Vector[R] @uncheckedVariance]): Matr[R] = {
       CompoundMatrix(rows.mapBy(f), numColumns)
     }
 
-    def transpose(implicit n: Numeric[T]): Matrix[T] = transposeDirect(self)
+    def transpose(implicit n: Numeric[T]): Matr[T] = transposeDirect(self)
 
-    def reduceByColumns(implicit m: RepMonoid[T], n: Numeric[T]): Vector[T] = {
+    def reduceByColumns(implicit m: RepMonoid[T], n: Numeric[T]): Vec[T] = {
       // TODO: inefficient
       val coll = Collection.indexRange(numColumns).map { column =>
         Collection.indexRange(numRows).map { row => rows(row)(column) }.reduce
       }
       DenseVector(coll)
       /*lazy val zeroVector = SparseVector(Collection(SArray.empty[Int]), Collection(SArray.empty[T]), length)
-      lazy val VectorMonoid = RepMonoid[SparseVector[T]]("Vector", zeroVector, true) { (t1, t2) => t1 +^ t2 }
+      lazy val VectorMonoid = RepMonoid[SparseVector[T]]("Vec", zeroVector, true) { (t1, t2) => t1 +^ t2 }
       rows.reduce(VectorMonoid)*/
     }
-    def sumByRows(implicit n: Numeric[T]): Vector[T] = ???
-    def sumByColumns(implicit n: Numeric[T]): Vector[T] = ???
+    def sumByRows(implicit n: Numeric[T]): Vec[T] = ???
+    def sumByColumns(implicit n: Numeric[T]): Vec[T] = ???
 
     @OverloadId("matrix")
-    def *(matrix: Matrix[T])(implicit n: Numeric[T], o: Overloaded1): Matrix[T] = {
+    def *(matrix: Matr[T])(implicit n: Numeric[T], o: Overloaded1): Matr[T] = {
       matrix match {
         case DenseFlatMatrix(rmValuesB, numColumnsB) =>
           val rowsNew = rows.map { vA =>
@@ -341,12 +341,12 @@ trait Matrices extends Vectors { self: LADsl =>
           CompoundMatrix(rows.map(row => row *^ diagonalVector), numColumns)
         case ConstDiagonalMatrix(diagonalValue, _) =>
           CompoundMatrix(rows.map(row => row *^ diagonalValue), numColumns)
-        case _ => !!!("matcher for @matrix argument in CompoundMatrix.*(matrix: Matrix[T]) is not specified.")
+        case _ => !!!("matcher for @matrix argument in CompoundMatrix.*(matrix: Matr[T]) is not specified.")
       }
     }
 
     @OverloadId("matrix")
-    def +^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = {
+    def +^^(matrix: Matr[T])(implicit n: Numeric[T]): Matr[T] = {
       def res = CompoundMatrix((rows zip matrix.rows).map { case Pair(v, s) => v +^ s }, numColumns)
       matrix match {
         case CompoundMatrix(_, _) => res
@@ -358,7 +358,7 @@ trait Matrices extends Vectors { self: LADsl =>
     }
 
     @OverloadId("matrix")
-    def *^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = {
+    def *^^(matrix: Matr[T])(implicit n: Numeric[T]): Matr[T] = {
       def res = CompoundMatrix((rows zip matrix.rows).map { case Pair(v, s) => v *^ s }, numColumns)
       matrix match {
         case CompoundMatrix(_, _) => res
@@ -378,24 +378,24 @@ trait Matrices extends Vectors { self: LADsl =>
   }
 
   abstract class ConstMatrix[T](val constItem: Rep[T], val numColumns: Rep[Int], val numRows: Rep[Int])
-                               (implicit val eT: Elem[T]) extends AbstractMatrix[T] {
+                               (implicit val eT: Elem[T]) extends Matrix[T] {
 
     def rmValues = Collection.replicate(numColumns * numRows, constItem)
     def items = rmValues
     def columns = Collection.replicate(numColumns, ConstVector(constItem, numRows))
     def rows = Collection.replicate(numRows, ConstVector(constItem, numColumns))
     def diagonalValues = Collection.replicate(Math.min(numRows, numColumns), constItem)
-    def replicatedRow: Vector[T] = ConstVector(zeroValue, numColumns) // TODO: create ZeroVector if it's introduced
+    def replicatedRow: Vec[T] = ConstVector(zeroValue, numColumns) // TODO: create ZeroVector if it's introduced
 
     @OverloadId("rows")
-    def apply(iRows: Coll[Int])(implicit o: Overloaded1): Matrix[T] = {
+    def apply(iRows: Coll[Int])(implicit o: Overloaded1): Matr[T] = {
       ConstMatrix(constItem, numColumns, iRows.length)
     }
     @OverloadId("row")
-    def apply(row: Rep[Int]): Vector[T] = ConstVector(constItem, numColumns)
+    def apply(row: Rep[Int]): Vec[T] = ConstVector(constItem, numColumns)
     def apply(row: Rep[Int], column: Rep[Int]): Rep[T] = constItem
 
-    def mapRowsBy[R: Elem](f: Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]): Matrix[R] = {
+    def mapRowsBy[R: Elem](f: Rep[Vector[T] => Vector[R] @uncheckedVariance]): Matr[R] = {
       // TODO: need a way to check @f for closure & effectfulness
       // TODO: in opposite case we can optimize this map due to constant input
       // TODO: -OR- we can use optimization rules in lower levels of Scalan
@@ -403,28 +403,28 @@ trait Matrices extends Vectors { self: LADsl =>
       CompoundMatrix(rows.mapBy(f), numColumns)
     }
 
-    def transpose(implicit n: Numeric[T]): Matrix[T] = ConstMatrix(constItem, numRows, numColumns)
+    def transpose(implicit n: Numeric[T]): Matr[T] = ConstMatrix(constItem, numRows, numColumns)
 
-    def reduceByColumns(implicit m: RepMonoid[T], n: Numeric[T]): Vector[T] = {
+    def reduceByColumns(implicit m: RepMonoid[T], n: Numeric[T]): Vec[T] = {
       // TODO: match monoids for optimal operations -OR- we can use optimization rules in lower levels of Scalan
       val res = Collection.replicate(numRows, constItem).reduce(m)
       val coll = Collection.replicate(numColumns, res)
       DenseVector(coll)
     }
-    def sumByRows(implicit n: Numeric[T]): Vector[T] = ???
-    def sumByColumns(implicit n: Numeric[T]): Vector[T] = ???
+    def sumByRows(implicit n: Numeric[T]): Vec[T] = ???
+    def sumByColumns(implicit n: Numeric[T]): Vec[T] = ???
 
-    override def countNonZeroesByColumns(implicit n: Numeric[T]): Vector[Int] = {
+    override def countNonZeroesByColumns(implicit n: Numeric[T]): Vec[Int] = {
       ConstVector(IF (constItem !== zeroValue) THEN numRows ELSE toRep(0), numColumns)
     }
 
-    override def *(vector: Vector[T])(implicit n: Numeric[T]): Vector[T] = {
+    override def *(vector: Vec[T])(implicit n: Numeric[T]): Vec[T] = {
       val dot = vector.reduce * constItem
       ConstVector(dot, numRows)
     }
 
     @OverloadId("matrix")
-    def *(matrix: Matrix[T])(implicit n: Numeric[T], o: Overloaded1): Matrix[T] = {
+    def *(matrix: Matr[T])(implicit n: Numeric[T], o: Overloaded1): Matr[T] = {
       def row = matrix.reduceByColumns *^ constItem
       matrix match {
         case DenseFlatMatrix(rmValuesB, width) =>
@@ -439,12 +439,12 @@ trait Matrices extends Vectors { self: LADsl =>
           DenseFlatMatrix(Collection.replicate(numRows, rowDiag).flatMap(v => v.items), diagonalValues.length)
         case ConstDiagonalMatrix(diagonalValue, _) =>
           ConstMatrix(constItem * diagonalValue, numRows, numColumns)
-        case _ => !!!("matcher for @matrix argument in ConstMatrix.*(matrix: Matrix[T]) is not specified.")
+        case _ => !!!("matcher for @matrix argument in ConstMatrix.*(matrix: Matr[T]) is not specified.")
       }
     }
 
     @OverloadId("matrix")
-    def +^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = {
+    def +^^(matrix: Matr[T])(implicit n: Numeric[T]): Matr[T] = {
       matrix match {
         case ConstMatrix(other_item, _, _) =>
           ConstMatrix(constItem + other_item, numColumns, numRows)
@@ -455,7 +455,7 @@ trait Matrices extends Vectors { self: LADsl =>
     }
 
     @OverloadId("matrix")
-    def *^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = {
+    def *^^(matrix: Matr[T])(implicit n: Numeric[T]): Matr[T] = {
       matrix match {
         case ConstMatrix(other_item, _, _) =>
           ConstMatrix(constItem * other_item, numColumns, numRows)
@@ -471,7 +471,7 @@ trait Matrices extends Vectors { self: LADsl =>
   }
 
   abstract class DiagonalMatrix[T](val diagonalValues: Rep[Collection[T]])
-                                  (implicit val eT: Elem[T]) extends AbstractMatrix[T] {
+                                  (implicit val eT: Elem[T]) extends Matrix[T] {
 
     def numColumns: Rep[Int] = diagonalValues.length
     def numRows: Rep[Int] = numColumns
@@ -480,36 +480,36 @@ trait Matrices extends Vectors { self: LADsl =>
       numColumns * numColumns).items
     def items = rmValues
     def constItem = zeroValue
-    def replicatedRow: Vector[T] = ConstVector(zeroValue, numColumns) // TODO: create ZeroVector if it's introduced
+    def replicatedRow: Vec[T] = ConstVector(zeroValue, numColumns) // TODO: create ZeroVector if it's introduced
 
-    def columns: Rep[Collection[AbstractVector[T]]] = Collection.indexRange(numColumns).map { i =>
+    def columns: Rep[Collection[Vector[T]]] = Collection.indexRange(numColumns).map { i =>
       SparseVector(Collection.replicate(1, i), diagonalValues.slice(i, 1), numColumns)
     }
-    def rows: Coll[AbstractVector[T]] = Collection.indexRange(numColumns).map { i =>
+    def rows: Coll[Vector[T]] = Collection.indexRange(numColumns).map { i =>
       SparseVector(Collection.singleton(i), diagonalValues.slice(i, 1), numRows)
     }
 
     @OverloadId("rows")
-    def apply(iRows: Coll[Int])(implicit o: Overloaded1): Matrix[T] = {
+    def apply(iRows: Coll[Int])(implicit o: Overloaded1): Matr[T] = {
       DiagonalMatrix(iRows.map(i => diagonalValues(i)))
     }
     @OverloadId("row")
-    def apply(row: Rep[Int]): Vector[T] = SparseVector(Collection.replicate(1, row), diagonalValues.slice(row, 1), numColumns)
+    def apply(row: Rep[Int]): Vec[T] = SparseVector(Collection.replicate(1, row), diagonalValues.slice(row, 1), numColumns)
     def apply(row: Rep[Int], column: Rep[Int]): Rep[T] = IF (row === column) THEN diagonalValues(row) ELSE eT.defaultRepValue
 
-    def mapRowsBy[R: Elem](f: Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]): Matrix[R] = {
+    def mapRowsBy[R: Elem](f: Rep[Vector[T] => Vector[R] @uncheckedVariance]): Matr[R] = {
       DenseFlatMatrix.fromRows(rows.mapBy(f), numColumns)
     }
 
-    def transpose(implicit n: Numeric[T]): Matrix[T] = self
+    def transpose(implicit n: Numeric[T]): Matr[T] = self
 
     // TODO: inconsistent, no respect towards monoid operation over zero values, fix
-    def reduceByColumns(implicit m: RepMonoid[T], n: Numeric[T]): Vector[T] = DenseVector(diagonalValues)
-    def sumByRows(implicit n: Numeric[T]): Vector[T] = ???
-    def sumByColumns(implicit n: Numeric[T]): Vector[T] = ???
+    def reduceByColumns(implicit m: RepMonoid[T], n: Numeric[T]): Vec[T] = DenseVector(diagonalValues)
+    def sumByRows(implicit n: Numeric[T]): Vec[T] = ???
+    def sumByColumns(implicit n: Numeric[T]): Vec[T] = ???
 
     @OverloadId("matrix")
-    def *(matrix: Matrix[T])(implicit n: Numeric[T], o: Overloaded1): Matrix[T] = {
+    def *(matrix: Matr[T])(implicit n: Numeric[T], o: Overloaded1): Matr[T] = {
       matrix match {
         case DenseFlatMatrix(rmValuesB, width) =>
           // TODO: check if there is excessive materialization in @diagonalReplicated
@@ -524,12 +524,12 @@ trait Matrices extends Vectors { self: LADsl =>
           DiagonalMatrix((DenseVector(diagonalValues) *^ DenseVector(diagonalValues1)).items)
         case ConstDiagonalMatrix(diagonalValue, _) =>
           DiagonalMatrix((DenseVector(diagonalValues) *^ diagonalValue).items)
-        case _ => !!!("matcher for @matrix argument in DiagonalMatrix.*(matrix: Matrix[T]) is not specified.")
+        case _ => !!!("matcher for @matrix argument in DiagonalMatrix.*(matrix: Matr[T]) is not specified.")
       }
     }
 
     @OverloadId("matrix")
-    def +^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = {
+    def +^^(matrix: Matr[T])(implicit n: Numeric[T]): Matr[T] = {
       matrix match {
         case DiagonalMatrix(diagonalValues1) =>
           DiagonalMatrix((DenseVector(diagonalValues) +^ DenseVector(diagonalValues1)).items)
@@ -540,7 +540,7 @@ trait Matrices extends Vectors { self: LADsl =>
     }
 
     @OverloadId("matrix")
-    def *^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = {
+    def *^^(matrix: Matr[T])(implicit n: Numeric[T]): Matr[T] = {
       matrix match {
         case DiagonalMatrix(diagonalValues1) =>
           DiagonalMatrix((DenseVector(diagonalValues) *^ DenseVector(diagonalValues1)).items)
@@ -556,7 +556,7 @@ trait Matrices extends Vectors { self: LADsl =>
   }
 
   abstract class ConstDiagonalMatrix[T](val constItem: Rep[T], val numColumns: Rep[Int])
-                                       (implicit val eT: Elem[T]) extends AbstractMatrix[T] {
+                                       (implicit val eT: Elem[T]) extends Matrix[T] {
 
     def numRows: Rep[Int] = numColumns
     def rmValues = SparseVectorBoxed(
@@ -564,33 +564,33 @@ trait Matrices extends Vectors { self: LADsl =>
       numColumns * numColumns).items
     def items = rmValues
     def diagonalValues = Collection.replicate(numColumns, constItem)
-    def replicatedRow: Vector[T] = ConstVector(zeroValue, numColumns) // TODO: create ZeroVector if it's introduced
+    def replicatedRow: Vec[T] = ConstVector(zeroValue, numColumns) // TODO: create ZeroVector if it's introduced
 
-    def rows: Coll[AbstractVector[T]] = Collection.indexRange(numColumns).map { i =>
+    def rows: Coll[Vector[T]] = Collection.indexRange(numColumns).map { i =>
       SparseVector(Collection.singleton(i), Collection.singleton(constItem), numColumns)
     }
     def columns = rows
 
     @OverloadId("rows")
-    def apply(iRows: Coll[Int])(implicit o: Overloaded1): Matrix[T] = {
+    def apply(iRows: Coll[Int])(implicit o: Overloaded1): Matr[T] = {
       CompoundMatrix(iRows.map(i => SparseVectorBoxed(Collection.singleton(Pair(i, constItem)), numColumns)), numColumns)
     }
     @OverloadId("row")
-    def apply(row: Rep[Int]): Vector[T] = SparseVector(Collection.singleton(row), Collection.singleton(constItem), numColumns)
+    def apply(row: Rep[Int]): Vec[T] = SparseVector(Collection.singleton(row), Collection.singleton(constItem), numColumns)
     def apply(row: Rep[Int], column: Rep[Int]): Rep[T] = IF (row === column) THEN constItem ELSE zeroValue
 
-    def mapRowsBy[R: Elem](f: Rep[AbstractVector[T] => AbstractVector[R] @uncheckedVariance]): Matrix[R] = {
+    def mapRowsBy[R: Elem](f: Rep[Vector[T] => Vector[R] @uncheckedVariance]): Matr[R] = {
       CompoundMatrix(rows.mapBy(f), numColumns)
     }
 
-    def transpose(implicit n: Numeric[T]): Matrix[T] = self
+    def transpose(implicit n: Numeric[T]): Matr[T] = self
 
-    def reduceByColumns(implicit m: RepMonoid[T], n: Numeric[T]): Vector[T] = ConstVector(constItem, numColumns)
-    def sumByRows(implicit n: Numeric[T]): Vector[T] = ???
-    def sumByColumns(implicit n: Numeric[T]): Vector[T] = ???
+    def reduceByColumns(implicit m: RepMonoid[T], n: Numeric[T]): Vec[T] = ConstVector(constItem, numColumns)
+    def sumByRows(implicit n: Numeric[T]): Vec[T] = ???
+    def sumByColumns(implicit n: Numeric[T]): Vec[T] = ???
 
     @OverloadId("matrix")
-    def *(matrix: Matrix[T])(implicit n: Numeric[T], o: Overloaded1): Matrix[T] = {
+    def *(matrix: Matr[T])(implicit n: Numeric[T], o: Overloaded1): Matr[T] = {
       matrix match {
         case DenseFlatMatrix(rmValuesB, width) =>
           DenseFlatMatrix((DenseVector(rmValuesB) *^ constItem).items, width)
@@ -602,12 +602,12 @@ trait Matrices extends Vectors { self: LADsl =>
           DiagonalMatrix((DenseVector(diagonalValues1) *^ constItem).items)
         case ConstDiagonalMatrix(diagonalValue, width) =>
           ConstDiagonalMatrix(constItem * diagonalValue, width)
-        case _ => !!!("matcher for @matrix argument in DiagonalMatrix.*(matrix: Matrix[T]) is not specified.")
+        case _ => !!!("matcher for @matrix argument in DiagonalMatrix.*(matrix: Matr[T]) is not specified.")
       }
     }
 
     @OverloadId("matrix")
-    def +^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = {
+    def +^^(matrix: Matr[T])(implicit n: Numeric[T]): Matr[T] = {
       matrix match {
         case ConstDiagonalMatrix(diagonalValue, _) =>
           ConstDiagonalMatrix(constItem + diagonalValue, numColumns)
@@ -617,7 +617,7 @@ trait Matrices extends Vectors { self: LADsl =>
     }
 
     @OverloadId("matrix")
-    def *^^(matrix: Matrix[T])(implicit n: Numeric[T]): Matrix[T] = {
+    def *^^(matrix: Matr[T])(implicit n: Numeric[T]): Matr[T] = {
       matrix match {
         case ConstDiagonalMatrix(diagonalValue, _) =>
           ConstDiagonalMatrix(constItem * diagonalValue, numColumns)
@@ -631,10 +631,10 @@ trait Matrices extends Vectors { self: LADsl =>
     }
   }
 
-  trait AbstractMatrixCompanion extends TypeFamily1[AbstractMatrix]
+  trait MatrixCompanion extends TypeFamily1[Matrix]
 
   trait DenseFlatMatrixCompanion extends ConcreteClass1[DenseFlatMatrix] {
-    def fromColumns[T: Elem](cols: Coll[AbstractVector[T]]): Matrix[T] = {
+    def fromColumns[T: Elem](cols: Coll[Vector[T]]): Matr[T] = {
       val numColumns = cols.length
       val numRows = cols(0).length
       val columnsArr: Coll[Collection[T]] = cols.map(col => col.items)
@@ -645,32 +645,32 @@ trait Matrices extends Vectors { self: LADsl =>
     }
     @OverloadId("dense")
     def fromNColl[T](items: NColl[T], numColumns: Rep[Int])
-                             (implicit elem: Elem[T], o: Overloaded2): Matrix[T] = {
+                             (implicit elem: Elem[T], o: Overloaded2): Matr[T] = {
       DenseFlatMatrix(items.flatMap { coll => coll }, numColumns)
     }
-    def fromRows[T: Elem](rows: Coll[AbstractVector[T]], length: IntRep): Matrix[T] = {
+    def fromRows[T: Elem](rows: Coll[Vector[T]], length: IntRep): Matr[T] = {
       DenseFlatMatrix(rows.flatMap(v => v.convertTo[DenseVector[T]].items), length)
     }
   }
 
   trait CompoundMatrixCompanion extends ConcreteClass1[CompoundMatrix] {
-    def fromColumns[T: Elem](cols: Coll[AbstractVector[T]]): Matrix[T] = ???
+    def fromColumns[T: Elem](cols: Coll[Vector[T]]): Matr[T] = ???
     def fromNColl[T](items: Coll[Collection[(Int, T)]], numColumns: Rep[Int])
-                    (implicit elem: Elem[T], o: Overloaded1): Matrix[T] = {
+                    (implicit elem: Elem[T], o: Overloaded1): Matr[T] = {
       CompoundMatrix(items.map { coll => SparseVector(coll.as, coll.bs, numColumns) }, numColumns)
     }
     @OverloadId("dense")
     def fromNColl[T](items: Coll[Collection[T]], numColumns: Rep[Int])
-                    (implicit elem: Elem[T], o: Overloaded2): Matrix[T] = {
+                    (implicit elem: Elem[T], o: Overloaded2): Matr[T] = {
       CompoundMatrix(items.map { coll => DenseVector(coll) }, numColumns)
     }
-    def fromRows[T: Elem](rows: Coll[AbstractVector[T]], length: IntRep): Matrix[T] = {
+    def fromRows[T: Elem](rows: Coll[Vector[T]], length: IntRep): Matr[T] = {
       CompoundMatrix(rows, length)
     }
   }
 
   trait ConstMatrixCompanion extends ConcreteClass1[ConstMatrix] {
-    def fromColumns[T: Elem](cols: Coll[AbstractVector[T]]): Matrix[T] = {
+    def fromColumns[T: Elem](cols: Coll[Vector[T]]): Matr[T] = {
       val numColumns = cols.length
       val numRows = cols(0).length
       val item = cols(0)(0)
@@ -678,13 +678,13 @@ trait Matrices extends Vectors { self: LADsl =>
     }
     @OverloadId("dense")
     def fromNColl[T](items: NColl[T], numColumns: Rep[Int])
-                    (implicit elem: Elem[T], o: Overloaded2): Matrix[T] = {
+                    (implicit elem: Elem[T], o: Overloaded2): Matr[T] = {
       val rmValues = items.flatMap { coll => coll }
       val numRows = rmValues.length /! numColumns
       val item = rmValues(0)
       ConstMatrix(item, numColumns, numRows)
     }
-    def fromRows[T: Elem](rows: Coll[AbstractVector[T]], length: IntRep): Matrix[T] = {
+    def fromRows[T: Elem](rows: Coll[Vector[T]], length: IntRep): Matr[T] = {
       val numRows = rows.length
       val numColumns = rows(0).length
       val item = rows(0)(0)
@@ -693,29 +693,29 @@ trait Matrices extends Vectors { self: LADsl =>
   }
 
   trait DiagonalMatrixCompanion extends ConcreteClass1[DiagonalMatrix] {
-    def fromColumns[T: Elem](cols: Coll[AbstractVector[T]]): Matrix[T] = ???
+    def fromColumns[T: Elem](cols: Coll[Vector[T]]): Matr[T] = ???
     def fromNColl[T](items: NColl[(Int, T)], numColumns: Rep[Int])
-                             (implicit elem: Elem[T], o: Overloaded1): Matrix[T] = ???
+                             (implicit elem: Elem[T], o: Overloaded1): Matr[T] = ???
     @OverloadId("dense")
     def fromNColl[T](items: NColl[T], numColumns: Rep[Int])
-                             (implicit elem: Elem[T], o: Overloaded2): Matrix[T] = ???
-    def fromRows[T: Elem](rows: Coll[AbstractVector[T]], length: IntRep): Matrix[T] = ???
+                             (implicit elem: Elem[T], o: Overloaded2): Matr[T] = ???
+    def fromRows[T: Elem](rows: Coll[Vector[T]], length: IntRep): Matr[T] = ???
   }
 }
 
 trait MatricesDsl extends impl.MatricesAbs { self: LADsl =>
 
-  implicit class MatrixExtensions[T](matrix: Matrix[T]) {
-    implicit def eItem: Elem[T] = matrix.selfType1.asInstanceOf[AbstractMatrixElem[T, _]].eT
+  implicit class MatrixExtensions[T](matrix: Matr[T]) {
+    implicit def eItem: Elem[T] = matrix.selfType1.asInstanceOf[MatrixElem[T, _]].eT
 
-    //def map[R: Elem](f: Vector[T] => Vector[R]): Matrix[R] = matrix.mapBy(fun(f))
+    //def map[R: Elem](f: Vec[T] => Vec[R]): Matr[R] = matrix.mapBy(fun(f))
 
-    //def filter(f: Rep[T] => Rep[Boolean]): Matrix[T] = matrix.filterBy(fun(f))
+    //def filter(f: Rep[T] => Rep[Boolean]): Matr[T] = matrix.filterBy(fun(f))
 
-    //def flatMap[R: Elem](f: Rep[T] => Coll[R]): Matrix[R] = matrix.flatMapBy(fun(f))
+    //def flatMap[R: Elem](f: Rep[T] => Coll[R]): Matr[R] = matrix.flatMapBy(fun(f))
   }
 
-  def transposeDirect[T](m: Matrix[T])(implicit elem: Elem[T], n: Numeric[T]): Matrix[T] = {
+  def transposeDirect[T](m: Matr[T])(implicit elem: Elem[T], n: Numeric[T]): Matr[T] = {
     // TODO: inefficient
     val rows = m.rows
     val zero = elem.defaultRepValue
