@@ -551,7 +551,7 @@ trait VectorsAbs extends scalan.ScalanDsl with Vectors {
   class ShiftVectorIso[T](implicit eT: Elem[T])
     extends EntityIso[ShiftVectorData[T], ShiftVector[T]] with Def[ShiftVectorIso[T]] {
     override def from(p: Rep[ShiftVector[T]]) =
-      (p.nonZeroIndices, p.nonZeroValues, p.constItem, p.length)
+      (p.nonZeroIndices, p.nonZeroValues, p.offset, p.length)
     override def to(p: Rep[(Collection[Int], (Collection[T], (T, Int)))]) = {
       val Pair(nonZeroIndices, Pair(nonZeroValues, Pair(constItem, length))) = p
       ShiftVector(nonZeroIndices, nonZeroValues, constItem, length)
@@ -773,8 +773,8 @@ trait VectorsSeq extends scalan.ScalanDslStd with VectorsDsl {
   }
 
   case class SeqShiftVector[T]
-      (override val nonZeroIndices: Coll[Int], override val nonZeroValues: Coll[T], override val constItem: Rep[T], override val length: IntRep)(implicit eT: Elem[T])
-    extends AbsShiftVector[T](nonZeroIndices, nonZeroValues, constItem, length) {
+      (override val nonZeroIndices: Coll[Int], override val nonZeroValues: Coll[T], override val offset: Rep[T], override val length: IntRep)(implicit eT: Elem[T])
+    extends AbsShiftVector[T](nonZeroIndices, nonZeroValues, offset, length) {
   }
 
   def mkShiftVector[T]
@@ -782,7 +782,7 @@ trait VectorsSeq extends scalan.ScalanDslStd with VectorsDsl {
     new SeqShiftVector[T](nonZeroIndices, nonZeroValues, constItem, length)
   def unmkShiftVector[T](p: Rep[AbstractVector[T]]) = p match {
     case p: ShiftVector[T] @unchecked =>
-      Some((p.nonZeroIndices, p.nonZeroValues, p.constItem, p.length))
+      Some((p.nonZeroIndices, p.nonZeroValues, p.offset, p.length))
     case _ => None
   }
 
@@ -2062,8 +2062,8 @@ trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
   }
 
   case class ExpShiftVector[T]
-      (override val nonZeroIndices: Coll[Int], override val nonZeroValues: Coll[T], override val constItem: Rep[T], override val length: IntRep)(implicit eT: Elem[T])
-    extends AbsShiftVector[T](nonZeroIndices, nonZeroValues, constItem, length)
+      (override val nonZeroIndices: Coll[Int], override val nonZeroValues: Coll[T], override val offset: Rep[T], override val length: IntRep)(implicit eT: Elem[T])
+    extends AbsShiftVector[T](nonZeroIndices, nonZeroValues, offset, length)
 
   object ShiftVectorMethods {
     object items {
@@ -2252,7 +2252,7 @@ trait VectorsExp extends scalan.ScalanDslExp with VectorsDsl {
     new ExpShiftVector[T](nonZeroIndices, nonZeroValues, constItem, length)
   def unmkShiftVector[T](p: Rep[AbstractVector[T]]) = p.elem.asInstanceOf[Elem[_]] match {
     case _: ShiftVectorElem[T] @unchecked =>
-      Some((p.asRep[ShiftVector[T]].nonZeroIndices, p.asRep[ShiftVector[T]].nonZeroValues, p.asRep[ShiftVector[T]].constItem, p.asRep[ShiftVector[T]].length))
+      Some((p.asRep[ShiftVector[T]].nonZeroIndices, p.asRep[ShiftVector[T]].nonZeroValues, p.asRep[ShiftVector[T]].offset, p.asRep[ShiftVector[T]].length))
     case _ =>
       None
   }

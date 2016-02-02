@@ -557,11 +557,11 @@ trait Vectors { self: LADsl =>
   }
 
   abstract class ShiftVector[T](val nonZeroIndices: Coll[Int], val nonZeroValues: Coll[T],
-                                val constItem: Rep[T], val length: IntRep)(implicit val eT: Elem[T])
+                                val offset: Rep[T], val length: IntRep)(implicit val eT: Elem[T])
     extends AbstractVector[T] {
 
     def items: Coll[T] = {
-      Collection.replicate(length, constItem).updateMany(nonZeroIndices, nonZeroValues)
+      Collection.replicate(length, offset).updateMany(nonZeroIndices, nonZeroValues)
     }
     def nonZeroItems: Coll[(Int, T)] = nonZeroIndices zip nonZeroValues
 
@@ -569,8 +569,8 @@ trait Vectors { self: LADsl =>
       val zero = toRep(0)
       IF (nonZeroIndices.length > zero) THEN {
         val k = binarySearch(i, nonZeroIndices)
-        IF (k >= zero) THEN nonZeroValues(k) ELSE constItem
-      } ELSE constItem
+        IF (k >= zero) THEN nonZeroValues(k) ELSE offset
+      } ELSE offset
     }
 
     @OverloadId("apply_by_collection")
@@ -582,17 +582,17 @@ trait Vectors { self: LADsl =>
     }
 
     def +^(vector: Vector[T])(implicit n: Numeric[T]): Vector[T] = {
-      def x1 = nonZeroIndices zip nonZeroValues.map(v => v - constItem)
+      def x1 = nonZeroIndices zip nonZeroValues.map(v => v - offset)
       def x2(cv: Rep[T]) = vector.nonZeroItems.map(v => (v._1, v._2 - cv))
-      def shiftedItems(cv: Rep[T]) = (x1 outerSum x2(cv)).map(v => (v._1, v._2 + constItem + cv))
+      def shiftedItems(cv: Rep[T]) = (x1 outerSum x2(cv)).map(v => (v._1, v._2 + offset + cv))
       vector match {
-        case ShiftVector(_, _, cv, _) => ShiftVectorBoxed(shiftedItems(cv), constItem + cv, length)
-        case ShiftVectorBoxed(_, cv, _) => ShiftVectorBoxed(shiftedItems(cv), constItem + cv, length)
+        case ShiftVector(_, _, cv, _) => ShiftVectorBoxed(shiftedItems(cv), offset + cv, length)
+        case ShiftVectorBoxed(_, cv, _) => ShiftVectorBoxed(shiftedItems(cv), offset + cv, length)
         case _ => vector +^ self
       }
     }
     def -^(vector: Vector[T])(implicit n: Numeric[T]): Vector[T] = {
-      lazy val c1 = constItem
+      lazy val c1 = offset
       def x1 = nonZeroItems.map(v => (v._1, v._2 - c1))
       def x2(c2: Rep[T]) = vector.nonZeroItems.map(v => (v._1, v._2 - c2))
       def updates = (nonZeroValues zip vector.items(nonZeroIndices)).map { case Pair(v1, v2) => v1 - v2 }
@@ -610,7 +610,7 @@ trait Vectors { self: LADsl =>
       }
     }
     def *^(vector: Vector[T])(implicit n: Numeric[T]): Vector[T] = {
-      val c1 = constItem
+      val c1 = offset
       def x1 = nonZeroItems.map(v => (v._1, v._2 - c1))
       def x2(cv: Rep[T]) = vector.nonZeroItems.map(v => (v._1, v._2 - cv))
       def x1_c2(cv: Rep[T]) = x1.map(v => (v._1, v._2 * cv))
@@ -624,7 +624,7 @@ trait Vectors { self: LADsl =>
       }
     }
     def /^(vector: Vector[T])(implicit f: Fractional[T]): Vector[T] = {
-      lazy val (is, vs, c1) = (nonZeroIndices, nonZeroValues, constItem)
+      lazy val (is, vs, c1) = (nonZeroIndices, nonZeroValues, offset)
       def updates = (vs zip vector.items(is)).map { case Pair(v1, v2) => v1 / v2 }
       def shiftedItems = vector.items.map(v => c1 / v).updateMany(is, updates)
       vector match {
@@ -653,7 +653,7 @@ trait Vectors { self: LADsl =>
       SparseVector(nonZeroIndices, nonZeroValues.map(v => Math.pow(v.toDouble, order).asRep[T]), length)
     }
 
-    def sum(implicit n: Numeric[T]): Rep[T] = nonZeroValues.reduce + (length - nonZeroValues.length).to[T] * constItem
+    def sum(implicit n: Numeric[T]): Rep[T] = nonZeroValues.reduce + (length - nonZeroValues.length).to[T] * offset
     def reduce(implicit m: RepMonoid[T]): Rep[T] = items.reduce(m)  //TODO: it's inefficient
 
     def euclideanNorm(implicit n: Numeric[T]): DoubleRep = Math.sqrt(nonZeroValues.map(v => v * v).reduce.toDouble)
