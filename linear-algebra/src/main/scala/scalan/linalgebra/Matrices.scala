@@ -178,21 +178,19 @@ trait Matrices extends Vectors { self: LADsl =>
       items.reduce / items.length.to[T]
     }
   }
-/*
-  abstract class ReplicatedMatrix[T](val replicatedRow: Vec[T], val numRows: Rep[Int])
+
+  /*abstract class ReplicatedMatrix[T](val replicatedRow: Vec[T], val numRows: Rep[Int])
                                     (implicit val eT: Elem[T]) extends Matr[T] {
 
-    def rows = Collection.replicate(numRows, replicatedRow)
+    //def rows = Collection.replicate(numRows, replicatedRow) // TODO: it doesn't stage because replicate(Vector) fails
+    def rows = Collection.indexRange(numRows).map(_ => replicatedRow) // TODO: it doesn't stage because replicate(Vector) fails
     def columns = Collection.indexRange(numColumns).map(j => ConstVector(replicatedRow(j), numRows))
     def numColumns = replicatedRow.length
-    def rmValues = rows.flatMap(row => row.items)
-    def constItem = zeroValue
-    def diagonalValues = Collection.indexRange(Math.min(numRows, numColumns)).map(i => replicatedRow(i))
+    def rmValues = Collection.indexRange(numRows).map(_ => replicatedRow).flatMap(row => row.items) // TODO: hack
+    //def diagonalValues = Collection.indexRange(Math.min(numRows, numColumns)).map(i => replicatedRow(i))
 
     @OverloadId("rows") 
-    def apply(iRows: Coll[Int])(implicit o: Overloaded1): Matr[T] = {
-      ReplicatedMatrix(replicatedRow, iRows.length)
-    }
+    def apply(iRows: Coll[Int])(implicit o: Overloaded1): Matr[T] = ReplicatedMatrix(replicatedRow, iRows.length)
     @OverloadId("row")
     def apply(row: Rep[Int]): Vec[T] = replicatedRow
     def apply(row: Rep[Int], column: Rep[Int]): Rep[T] = replicatedRow(column)
@@ -270,8 +268,8 @@ trait Matrices extends Vectors { self: LADsl =>
       val items = rows.flatMap(v => v.nonZeroValues)
       items.reduce / (numRows * numColumns).to[T]
     }
-  }
-*/
+  }*/
+
   abstract class CompoundMatrix[T](val rows: Rep[Collection[Vector[T]]], val numColumns: Rep[Int])
                                   (implicit val eT: Elem[T]) extends Matrix[T] {
 
@@ -428,7 +426,9 @@ trait Matrices extends Vectors { self: LADsl =>
       def row = matrix.reduceByColumns *^ constItem
       matrix match {
         case DenseFlatMatrix(rmValuesB, width) =>
-          DenseFlatMatrix(Collection.replicate(numRows, row).flatMap(v => v.items), width)
+          // TODO:
+          DenseFlatMatrix(Collection.indexRange(numRows).map(_ => row).flatMap(v => v.items), width)
+          //DenseFlatMatrix(Collection.replicate(numRows, row).flatMap(v => v.items), width)
         case CompoundMatrix(_, width) =>
           CompoundMatrix(Collection.replicate(numRows, row), width)
         case ConstMatrix(value, width, _) =>
