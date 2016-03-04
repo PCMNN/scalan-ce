@@ -126,7 +126,7 @@ trait Vectors { self: LADsl =>
         case SparseVectorBoxed(_, _) => SparseVectorBoxed(newItems, length)
         case ShiftVector(_, _, cv, _) => DenseVector(shiftedFlatItems(cv))
         case ShiftVectorBoxed(_, cv, _) => DenseVector(shiftedFlatItems(cv))
-        case _ => !!!("matcher for @vector argument in DenseVector.*^(vector: Vec[T]) is not specified.")
+        case _ => vector *^ self
       }
     }
     def /^(vector: Vec[T])(implicit f: Fractional[T]): Vec[T] = {
