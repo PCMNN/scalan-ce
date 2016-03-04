@@ -76,15 +76,7 @@ trait LmsBridge extends Passes {
     def mirrorDefs(fromGraph: AstGraph, defs: Seq[TableEntry[_]]): LmsMirror = {
       val finalMirror = defs.foldLeft(withoutLastExp) { (m, t) =>
         val s = t.sym
-        val symbol = m.symMirror.get(s)
-        println("///////////////////////////////////")
-        println("///////////////////////////////////")
-        println("///////////////////////////////////")
-        println(s"mirrorDefs $s is $symbol")
-        println("///////////////////////////////////")
-        println("///////////////////////////////////")
-        println("///////////////////////////////////")
-        symbol match {
+        m.symMirror.get(s) match {
           case Some(lmsExp) => m.withLastExp(lmsExp)
           case None =>
             val d = t.rhs
@@ -143,15 +135,7 @@ trait LmsBridge extends Passes {
     val paramsLength = fieldMirrors.length
 
     val lmsMethodName = this.lmsMethodName(d, clazz.getSimpleName)
-    val symbol = lmsMemberByName(lmsMethodName)
-    println("+++++++++++++++++++++++++++++++++++")
-    println("+++++++++++++++++++++++++++++++++++")
-    println("+++++++++++++++++++++++++++++++++++")
-    println(s"LMS method $lmsMethodName is $symbol")
-    println("+++++++++++++++++++++++++++++++++++")
-    println("+++++++++++++++++++++++++++++++++++")
-    println("+++++++++++++++++++++++++++++++++++")
-    val lmsMethod = symbol match {
+    val lmsMethod = lmsMemberByName(lmsMethodName) match {
       case NoSymbol =>
         !!!(s"LMS method $lmsMethodName not found")
       case t: TermSymbol if t.isOverloaded =>
