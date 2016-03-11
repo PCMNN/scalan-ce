@@ -105,7 +105,7 @@ trait Collections { self: CollectionsDsl =>
           val bs = replicate(len, ps._2)
           as zip bs
         }
-        case viewElem: ViewElem[a, b] =>
+        case _: ViewElem[a, b] =>
           CollectionOverArray(SArray.replicate(len, v))
         case e => ???(s"Element is $e")
       }
