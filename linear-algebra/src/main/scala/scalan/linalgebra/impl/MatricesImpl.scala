@@ -62,8 +62,8 @@ trait MatricesAbs extends scalan.ScalanDsl with Matrices {
     proxyOps[MatrixCompanionAbs](p)
 
   abstract class AbsDenseFlatMatrix[T]
-      (rmValues: Rep[Collection[T]], numColumns: Rep[Int])(implicit eT: Elem[T])
-    extends DenseFlatMatrix[T](rmValues, numColumns) with Def[DenseFlatMatrix[T]] {
+      (rmFlatValues: Rep[Collection[T]], numColumns: Rep[Int])(implicit eT: Elem[T])
+    extends DenseFlatMatrix[T](rmFlatValues, numColumns) with Def[DenseFlatMatrix[T]] {
     lazy val selfType = element[DenseFlatMatrix[T]]
   }
   // elem for concrete class
@@ -75,7 +75,7 @@ trait MatricesAbs extends scalan.ScalanDsl with Matrices {
       Map("T" -> Left(eT))
     }
 
-    override def convertMatrix(x: Rep[Matrix[T]]) = DenseFlatMatrix(x.rmValues, x.numColumns)
+    override def convertMatrix(x: Rep[Matrix[T]]) = DenseFlatMatrix(x.rmFlatValues, x.numColumns)
     override def getDefaultRep = DenseFlatMatrix(element[Collection[T]].defaultRepValue, 0)
     override lazy val tag = {
       implicit val tagT = eT.tag
@@ -90,10 +90,10 @@ trait MatricesAbs extends scalan.ScalanDsl with Matrices {
   class DenseFlatMatrixIso[T](implicit eT: Elem[T])
     extends EntityIso[DenseFlatMatrixData[T], DenseFlatMatrix[T]] with Def[DenseFlatMatrixIso[T]] {
     override def from(p: Rep[DenseFlatMatrix[T]]) =
-      (p.rmValues, p.numColumns)
+      (p.rmFlatValues, p.numColumns)
     override def to(p: Rep[(Collection[T], Int)]) = {
-      val Pair(rmValues, numColumns) = p
-      DenseFlatMatrix(rmValues, numColumns)
+      val Pair(rmFlatValues, numColumns) = p
+      DenseFlatMatrix(rmFlatValues, numColumns)
     }
     lazy val eFrom = pairElement(element[Collection[T]], element[Int])
     lazy val eTo = new DenseFlatMatrixElem[T](self)
@@ -117,8 +117,8 @@ trait MatricesAbs extends scalan.ScalanDsl with Matrices {
     def apply[T](p: Rep[DenseFlatMatrixData[T]])(implicit eT: Elem[T]): Rep[DenseFlatMatrix[T]] =
       isoDenseFlatMatrix(eT).to(p)
     @scalan.OverloadId("fromFields")
-    def apply[T](rmValues: Rep[Collection[T]], numColumns: Rep[Int])(implicit eT: Elem[T]): Rep[DenseFlatMatrix[T]] =
-      mkDenseFlatMatrix(rmValues, numColumns)
+    def apply[T](rmFlatValues: Rep[Collection[T]], numColumns: Rep[Int])(implicit eT: Elem[T]): Rep[DenseFlatMatrix[T]] =
+      mkDenseFlatMatrix(rmFlatValues, numColumns)
 
     def unapply[T](p: Rep[Matrix[T]]) = unmkDenseFlatMatrix(p)
   }
@@ -145,7 +145,7 @@ trait MatricesAbs extends scalan.ScalanDsl with Matrices {
     reifyObject(new DenseFlatMatrixIso[T]()(eT))
 
   // 6) smart constructor and deconstructor
-  def mkDenseFlatMatrix[T](rmValues: Rep[Collection[T]], numColumns: Rep[Int])(implicit eT: Elem[T]): Rep[DenseFlatMatrix[T]]
+  def mkDenseFlatMatrix[T](rmFlatValues: Rep[Collection[T]], numColumns: Rep[Int])(implicit eT: Elem[T]): Rep[DenseFlatMatrix[T]]
   def unmkDenseFlatMatrix[T](p: Rep[Matrix[T]]): Option[(Rep[Collection[T]], Rep[Int])]
 
   abstract class AbsCompoundMatrix[T]
@@ -504,16 +504,16 @@ trait MatricesStd extends scalan.ScalanDslStd with MatricesDsl {
   }
 
   case class StdDenseFlatMatrix[T]
-      (override val rmValues: Rep[Collection[T]], override val numColumns: Rep[Int])(implicit eT: Elem[T])
-    extends AbsDenseFlatMatrix[T](rmValues, numColumns) {
+      (override val rmFlatValues: Rep[Collection[T]], override val numColumns: Rep[Int])(implicit eT: Elem[T])
+    extends AbsDenseFlatMatrix[T](rmFlatValues, numColumns) {
   }
 
   def mkDenseFlatMatrix[T]
-    (rmValues: Rep[Collection[T]], numColumns: Rep[Int])(implicit eT: Elem[T]): Rep[DenseFlatMatrix[T]] =
-    new StdDenseFlatMatrix[T](rmValues, numColumns)
+    (rmFlatValues: Rep[Collection[T]], numColumns: Rep[Int])(implicit eT: Elem[T]): Rep[DenseFlatMatrix[T]] =
+    new StdDenseFlatMatrix[T](rmFlatValues, numColumns)
   def unmkDenseFlatMatrix[T](p: Rep[Matrix[T]]) = p match {
     case p: DenseFlatMatrix[T] @unchecked =>
-      Some((p.rmValues, p.numColumns))
+      Some((p.rmFlatValues, p.numColumns))
     case _ => None
   }
 
@@ -581,8 +581,8 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
   }
 
   case class ExpDenseFlatMatrix[T]
-      (override val rmValues: Rep[Collection[T]], override val numColumns: Rep[Int])(implicit eT: Elem[T])
-    extends AbsDenseFlatMatrix[T](rmValues, numColumns)
+      (override val rmFlatValues: Rep[Collection[T]], override val numColumns: Rep[Int])(implicit eT: Elem[T])
+    extends AbsDenseFlatMatrix[T](rmFlatValues, numColumns)
 
   object DenseFlatMatrixMethods {
     object items {
@@ -889,11 +889,11 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
   }
 
   def mkDenseFlatMatrix[T]
-    (rmValues: Rep[Collection[T]], numColumns: Rep[Int])(implicit eT: Elem[T]): Rep[DenseFlatMatrix[T]] =
-    new ExpDenseFlatMatrix[T](rmValues, numColumns)
+    (rmFlatValues: Rep[Collection[T]], numColumns: Rep[Int])(implicit eT: Elem[T]): Rep[DenseFlatMatrix[T]] =
+    new ExpDenseFlatMatrix[T](rmFlatValues, numColumns)
   def unmkDenseFlatMatrix[T](p: Rep[Matrix[T]]) = p.elem.asInstanceOf[Elem[_]] match {
     case _: DenseFlatMatrixElem[T] @unchecked =>
-      Some((p.asRep[DenseFlatMatrix[T]].rmValues, p.asRep[DenseFlatMatrix[T]].numColumns))
+      Some((p.asRep[DenseFlatMatrix[T]].rmFlatValues, p.asRep[DenseFlatMatrix[T]].numColumns))
     case _ =>
       None
   }
@@ -927,9 +927,9 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
       }
     }
 
-    object rmValues {
+    object rmFlatValues {
       def unapply(d: Def[_]): Option[Rep[CompoundMatrix[T]] forSome {type T}] = d match {
-        case MethodCall(receiver, method, _, _) if receiver.elem.isInstanceOf[CompoundMatrixElem[_]] && method.getName == "rmValues" =>
+        case MethodCall(receiver, method, _, _) if receiver.elem.isInstanceOf[CompoundMatrixElem[_]] && method.getName == "rmFlatValues" =>
           Some(receiver).asInstanceOf[Option[Rep[CompoundMatrix[T]] forSome {type T}]]
         case _ => None
       }
@@ -1197,9 +1197,9 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
     extends AbsConstMatrix[T](constItem, numColumns, numRows)
 
   object ConstMatrixMethods {
-    object rmValues {
+    object rmFlatValues {
       def unapply(d: Def[_]): Option[Rep[ConstMatrix[T]] forSome {type T}] = d match {
-        case MethodCall(receiver, method, _, _) if receiver.elem.isInstanceOf[ConstMatrixElem[_]] && method.getName == "rmValues" =>
+        case MethodCall(receiver, method, _, _) if receiver.elem.isInstanceOf[ConstMatrixElem[_]] && method.getName == "rmFlatValues" =>
           Some(receiver).asInstanceOf[Option[Rep[ConstMatrix[T]] forSome {type T}]]
         case _ => None
       }
@@ -1480,9 +1480,9 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
       }
     }
 
-    object rmValues {
+    object rmFlatValues {
       def unapply(d: Def[_]): Option[Rep[DiagonalMatrix[T]] forSome {type T}] = d match {
-        case MethodCall(receiver, method, _, _) if receiver.elem.isInstanceOf[DiagonalMatrixElem[_]] && method.getName == "rmValues" =>
+        case MethodCall(receiver, method, _, _) if receiver.elem.isInstanceOf[DiagonalMatrixElem[_]] && method.getName == "rmFlatValues" =>
           Some(receiver).asInstanceOf[Option[Rep[DiagonalMatrix[T]] forSome {type T}]]
         case _ => None
       }
@@ -1727,9 +1727,9 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
       }
     }
 
-    object rmValues {
+    object rmFlatValues {
       def unapply(d: Def[_]): Option[Rep[ConstDiagonalMatrix[T]] forSome {type T}] = d match {
-        case MethodCall(receiver, method, _, _) if receiver.elem.isInstanceOf[ConstDiagonalMatrixElem[_]] && method.getName == "rmValues" =>
+        case MethodCall(receiver, method, _, _) if receiver.elem.isInstanceOf[ConstDiagonalMatrixElem[_]] && method.getName == "rmFlatValues" =>
           Some(receiver).asInstanceOf[Option[Rep[ConstDiagonalMatrix[T]] forSome {type T}]]
         case _ => None
       }
@@ -2003,9 +2003,9 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
       }
     }
 
-    object rmValues {
+    object rmFlatValues {
       def unapply(d: Def[_]): Option[Rep[Matrix[T]] forSome {type T}] = d match {
-        case MethodCall(receiver, method, _, _) if receiver.elem.isInstanceOf[MatrixElem[_, _]] && method.getName == "rmValues" =>
+        case MethodCall(receiver, method, _, _) if receiver.elem.isInstanceOf[MatrixElem[_, _]] && method.getName == "rmFlatValues" =>
           Some(receiver).asInstanceOf[Option[Rep[Matrix[T]] forSome {type T}]]
         case _ => None
       }
@@ -2297,7 +2297,7 @@ trait MatricesExp extends scalan.ScalanDslExp with MatricesDsl {
 }
 
 object Matrices_Module extends scalan.ModuleInfo {
-  val dump = "H4sIAAAAAAAAAM1YTWwbRRSeteP4L0r6C0EiIgQDAtE4BaEi5VAFJ4EgN4myoUKmAo3XE3fL7OyyMw42hx57gBviyqESEpdeUA8cQL0gJMSBE0JInDhwKq2qHtoDAvFm9se7zm5CTIjiw2h3Zt573/ve98Zj37iDctxFz3ADU8xmLSLwrK6eF7io6EtMmKJ3wW51KFkkW7998crNmexX32TQRAONXsZ8kdMGKnoPS10nfNZFq46KmBmEC9vlAj1ZVxGqhk0pMYRps6ppWR2Bm5RU6yYX83U00rRbvffRVaTV0THDZoZLBNFrFHNOuD9fIBKRGb4X1XtvzenHYFWZRTWSxaaLTQHwIcYxb/8GcfQes1nPEmjch7bmSFiwJ29aju2KIEQe3F22W8HrCMMwgU7Ur+BtXIUQ7aouXJO1wbLsYOM93CarsEVuHwHAnNCtzZ6j3rN1VOKiBQStWA5VM10HIQQVeFGBmO3zMxvyMyv5qejENTE1P8Rycd21uz3kfbQsQl0HXLywh4vAA1lircpHl4y3H+plKyONuxJKXmU4Co6eSFGDKgXw+P3GJ/z+a9fPZVCpgUomX2hy4WJDREvus1XGjNlCYQ4JxG4bqjWTVi0VZQH2DEiiaNiWgxl48qkcgzpR0zCF3CznxvzqpFCfFw4JtmpdRwvznU7JV+mmhildv/3Ymaf/WHorgzLxEEVwqYPw3cCpQKMXMMih6zuX44RA2qZiWA7Fbn/M7xI8pOHZ23db382hS5mQPD/Wv6sXuMjxX34u//Tc+QwqNJS6lyluN4A/vkSJtebWbCYaqGBvE9dbyW9jKp8S65dvkS3cocJnNUpHFugQaDq1Dx0iuZpXmtcCAsqebFdtRirL65UH+g+f3pCqdNGYt+I15t/mub9+Hd8SSrACFVzrIqYdwgOKs9DTcdJLtbAT9qyGWpoMYclhCjywjgVOOhZLCuOip9KE45B117TgoNomL3/79Zv3bq3mlHZO+Nwp6N6x4VPXp1Fmp81BpBUmkgRT8ljRbYscn7lvvnP9Y6GkoXXjp9Ja8wokP6/sHt9FJcHp+OW1a6fvff7uSdXVhaYpLOxU5vbR00EL/o89i+KFHK/53xJK6WfjixOLhHECMhZeR6Z0oBxPh2te5aECkwPWtWgiUxHTSNBJbUA/GbIZoBmRrbanDJNRT4WCm0oXHLD0yEb9FL1z/lYG5d5AuS1oYF5HuabdYa2AfvhaFaQrXg3mtDj9QDd2sRXSrT7TqJ/zAGq1sazF89rfCbiDxMEmHHHtD4bp8tGLMOurdi8YQx0AcjiTnNCcGl/aj1zHpcJkWYZR66Nx48MSawLmqYjZ60dCP3AGMS5WhJ9Rooh2ghpaCsnWebDeSNTxwaqoXJPJDiOhUxHLw9LPINqjJ57xlonbNsP0IC8bB3FaLPq4hjot4saHdlrsxHz0Cn7Ip0UEW5+Pgyb+pGqz/8p+JN3RRMFm4RI5fG1SNLtLg5TlPXEZWybtnU2Mu7+umEjtBifmcRjW5Phnf4+/saCcyss1Ou5f7KgJFWqTpov9xF00k3Ln0/2bMrB+9eFnq8//ePN39RujJO/c8GOKhf9gRH9bxInK1RcWOY3ABVHJG7iC+g9A2AmOHBIAAA=="
+  val dump = "H4sIAAAAAAAAAM1YTWwbRRSeteM4tqOkvxAkIkIwIBCNUxAqUg5VsBMIcpMoGypkKtB4PXG3zM4uO+Ngc+ixB7ghrhwqIXHpBfXAAdQLQkIcOCGExIkDp9Kq6qE9IBBvZn+86+wmxIQoPox2Z+a9973vfW889o07KMdd9Aw3MMVsziICz+nqeZGLsr7EhCl6F+xWh5Ia2frti1duzma/+iaDJhto9DLmNU4bqOA9LHWd8FkXrToqYGYQLmyXC/RkXUWoGDalxBCmzSqmZXUEblJSqZtcLNTRSNNu9d5HV5FWR8cMmxkuEUSvUsw54f78GJGIzPC9oN57a04/BqvILCqRLDZdbAqADzGOefs3iKP3mM16lkATPrQ1R8KCPXnTcmxXBCHy4O6y3QpeRxiGCXSifgVv4wqEaFd04ZqsDZYlBxvv4TZZhS1y+wgA5oRubfYc9Z6toyIXLSBoxXKomuk6CCGowIsKxFyfn7mQnznJT1knromp+SGWi+uu3e0h76NlEeo64OKFPVwEHsgSa5U/umS8/VAvWRlp3JVQ8irDUXD0RIoaVCmAx+83PuH3X7t+LoOKDVQ0+WKTCxcbIlpyn60SZswWCnNIIHbbUK3ZtGqpKIuwZ0ASBcO2HMzAk0/lONSJmoYp5GY5N+5XJ4X6vHBIsFXrOlqY70xKvko3VUzp+u3Hzjz9x9JbGZSJhyiASx2E7wZOBRq9gEEOXd+5HCcF0jYVw3IodPtjfpfgIQ3P3r7b+m4eXcqE5Pmx/l29wEWO//Jz6afnzmfQWEOpe5nidgP440uUWGtu1WaigcbsbeJ6K/ltTOVTYv3yLbKFO1T4rEbpyAIdAs2k9qFDJFcLSvNaQEDJk+2qzUh5eb38QP/h0xtSlS4a91a8xvzbPPfXrxNbQglWoHHXAoTiIqYdwgOas9DXceKL1bAb9qyIWpoKoclhGjywjgVOOhZLCuOip9LE45B117TgsNomL3/79Zv3bq3mlH5O+Pwp6N7R4dPXp1JmqM1DpBUmkkRT9JjRbYscn71vvnP9Y6HkoXXjJ9Na8wokv6DsHt9FKcEJ+eW1a6fvff7uSdXZY01TWNgpz++jr4M2/B/7FsULOVH1vymU2s/GFydrhHEiheJ1ZUoXyvF0uOZVHiowNWBdjSYyHTGNBJ3SBvSTIZsBmhHZbnvKMBn1dCi46XTBAUuPbNRP0Tvnb2VQ7g2U24Im5nWUa9od1groh69WQbri1WBOi9MPdGMXWyHd6jOD+jkPoFYbS1o8r/2dgjtIHGzCEdf+YJguH70Is75q94Ix1AEghzPJCc2r8aX9yHVCKkyWZRi1Pho3PiyxJmCejpi9fiT0A2cQ42JF+BklimgnqKGlkGydB+uNRB0frIpKVZnsMBI6FbE8LP0Moj164plombhtM0wP8rJxEKdFzcc11GkRNz6002In5qNX8EM+LSLY+nwcNPEnVZv9V/Yj6Y4mCjYLl8jha5Oi2V0apCTvicvYMmnvbGLc/XXFZGo3ODGPw7Amxz/7e/yNY8qpvFyj4/7FjppQoTZputhP3EWzKXc+3b8pA+tXH362+vyPN39XvzGK8s4NP6hY+C9G9LdFnKhcfbHGaQQuiErewBXUfwBwKuksIBIAAA=="
 }
 }
 

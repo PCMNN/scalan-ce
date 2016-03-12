@@ -13,12 +13,16 @@ trait Matrices extends Vectors { self: LADsl =>
   type Matr[T] = Rep[Matrix[T]]
 
   trait Matrix[T] extends Def[Matrix[T]] {
+
+    implicit def eT: Elem[T]
+
     def numColumns: Rep[Int]
     def numRows: Rep[Int]
-    implicit def eT: Elem[T]
+
     def rows: Rep[Collection[Vector[T]]]
     def columns: Rep[Collection[Vector[T]]]
-    def rmValues: Rep[Collection[T]]
+
+    def rmFlatValues: Rep[Collection[T]]
     def zeroValue = eT.defaultRepValue
     def constItem: Rep[T]
     def diagonalValues: Rep[Collection[T]]
@@ -71,17 +75,17 @@ trait Matrices extends Vectors { self: LADsl =>
     def average(implicit f: Fractional[T], m: RepMonoid[T]): Rep[T]
   }
 
-  abstract class DenseFlatMatrix[T](val rmValues: Rep[Collection[T]], val numColumns: Rep[Int])
+  abstract class DenseFlatMatrix[T](val rmFlatValues: Rep[Collection[T]], val numColumns: Rep[Int])
                                    (implicit val eT: Elem[T]) extends Matrix[T] {
 
-    def items = rmValues
+    def items = rmFlatValues
     def constItem = zeroValue
-    def numRows: Rep[Int] = rmValues.length /! numColumns
+    def numRows: Rep[Int] = rmFlatValues.length /! numColumns
     def columns: Rep[Collection[Vector[T]]] = {
-      Collection.indexRange(numColumns).map(i => DenseVector(Collection(rmValues.arr.stride(i, numRows, numColumns))))
+      Collection.indexRange(numColumns).map(i => DenseVector(Collection(rmFlatValues.arr.stride(i, numRows, numColumns))))
     }
-    def rows: Coll[DenseVector[T]] = Collection(rmValues.arr.grouped(numColumns).map(vs => DenseVector(Collection(vs))))
-    def diagonalValues = rmValues(Collection.indexRange(Math.min(numRows, numColumns)).map(i => i * numColumns + i))
+    def rows: Coll[DenseVector[T]] = Collection(rmFlatValues.arr.grouped(numColumns).map(vs => DenseVector(Collection(vs))))
+    def diagonalValues = rmFlatValues(Collection.indexRange(Math.min(numRows, numColumns)).map(i => i * numColumns + i))
     def replicatedRow: Vec[T] = ConstVector(zeroValue, numColumns) // TODO: create ZeroVector if it's introduced
 
     @OverloadId("rows")
@@ -89,7 +93,7 @@ trait Matrices extends Vectors { self: LADsl =>
       DenseFlatMatrix(iRows.map(i => items.slice(numColumns * i, numColumns)).flatMap(v => v), numColumns)
     }
     @OverloadId("row")
-    def apply(row: Rep[Int]): Vec[T] = DenseVector(rmValues.slice(row * numColumns, numColumns))
+    def apply(row: Rep[Int]): Vec[T] = DenseVector(rmFlatValues.slice(row * numColumns, numColumns))
     def apply(row: Rep[Int], column: Rep[Int]): Rep[T] = items(toCellIndex(row, column))
 
     def mapRowsBy[R: Elem](f: Rep[Vector[T] => Vector[R] @uncheckedVariance]): Matr[R] = {
@@ -126,9 +130,9 @@ trait Matrices extends Vectors { self: LADsl =>
           CompoundMatrix(rowsConstant, width)
         case DiagonalMatrix(diagonalValues) =>
           val diagonalReplicated = Collection.replicate(numRows, diagonalValues).flatMap(coll => coll)
-          DenseFlatMatrix((DenseVector(rmValues) *^ DenseVector(diagonalReplicated)).items, numColumns)
+          DenseFlatMatrix((DenseVector(rmFlatValues) *^ DenseVector(diagonalReplicated)).items, numColumns)
         case ConstDiagonalMatrix(diagonalValue, _) =>
-          DenseFlatMatrix((DenseVector(rmValues) *^ diagonalValue).items, numColumns)
+          DenseFlatMatrix((DenseVector(rmFlatValues) *^ diagonalValue).items, numColumns)
         // TODO: check case _
         case _ => !!!("matcher for @matrix argument in DenseFlatMatrix.*(matrix: Matr[T]) is not specified.")
       }
@@ -138,20 +142,20 @@ trait Matrices extends Vectors { self: LADsl =>
     def +^^(matrix: Matr[T])(implicit n: Numeric[T]): Matr[T] = {
       matrix match {
         case DenseFlatMatrix(rmValues1, _) =>
-          DenseFlatMatrix((DenseVector(rmValues) +^ DenseVector(rmValues1)).items, numColumns)
+          DenseFlatMatrix((DenseVector(rmFlatValues) +^ DenseVector(rmValues1)).items, numColumns)
         case CompoundMatrix(rows1, _) =>
           DenseFlatMatrix((rows zip rows1).flatMap { case Pair(v1, v2) => (v1 +^ v2).items }, numColumns)
         case ConstMatrix(value, _, _) =>
-          DenseFlatMatrix((DenseVector(rmValues) +^ value).items, numColumns)
+          DenseFlatMatrix((DenseVector(rmFlatValues) +^ value).items, numColumns)
         case DiagonalMatrix(diagonal) =>
           val width = diagonal.length
           val mainDiagonalIndices = Collection.indexRange(width).map(i => i * width + i)
-          val newValues = (diagonal zip rmValues(mainDiagonalIndices)).map { case Pair(d, v) => d + v }
-          DenseFlatMatrix(rmValues.updateMany(mainDiagonalIndices, newValues), numColumns)
+          val newValues = (diagonal zip rmFlatValues(mainDiagonalIndices)).map { case Pair(d, v) => d + v }
+          DenseFlatMatrix(rmFlatValues.updateMany(mainDiagonalIndices, newValues), numColumns)
         case ConstDiagonalMatrix(diagonalValue, width) =>
           val mainDiagonalIndices = Collection.indexRange(width).map(i => i * width + i)
-          val newValues = rmValues(mainDiagonalIndices).map(v => diagonalValue + v)
-          DenseFlatMatrix(rmValues.updateMany(mainDiagonalIndices, newValues), numColumns)
+          val newValues = rmFlatValues(mainDiagonalIndices).map(v => diagonalValue + v)
+          DenseFlatMatrix(rmFlatValues.updateMany(mainDiagonalIndices, newValues), numColumns)
         // TODO: check case _
         case _ => !!!("matcher for @matrix argument in DenseFlatMatrix.+^^(matrix: Matr[T]) is not specified.")
       }
@@ -161,18 +165,18 @@ trait Matrices extends Vectors { self: LADsl =>
     def *^^(matrix: Matr[T])(implicit n: Numeric[T]): Matr[T] = {
       matrix match {
         case DenseFlatMatrix(rmValues1, _) =>
-          DenseFlatMatrix((DenseVector(rmValues) *^ DenseVector(rmValues1)).items, numColumns)
+          DenseFlatMatrix((DenseVector(rmFlatValues) *^ DenseVector(rmValues1)).items, numColumns)
         case CompoundMatrix(rows1, _) =>
           CompoundMatrix((rows zip rows1).map { case Pair(v1, v2) => v1 *^ v2 }, numColumns)
         case ConstMatrix(value, _, _) =>
-          DenseFlatMatrix((DenseVector(rmValues) *^ value).items, numColumns)
+          DenseFlatMatrix((DenseVector(rmFlatValues) *^ value).items, numColumns)
         case DiagonalMatrix(diagonalValues) =>
           val width = diagonalValues.length
           val mainDiagonalIndices = Collection.indexRange(width).map(i => i * width + i)
-          DiagonalMatrix((DenseVector(rmValues(mainDiagonalIndices)) *^ DenseVector(diagonalValues)).items)
+          DiagonalMatrix((DenseVector(rmFlatValues(mainDiagonalIndices)) *^ DenseVector(diagonalValues)).items)
         case ConstDiagonalMatrix(diagonalValue, width) =>
           val mainDiagonalIndices = Collection.indexRange(width).map(i => i * width + i)
-          DiagonalMatrix((DenseVector(rmValues(mainDiagonalIndices)) *^ diagonalValue).items)
+          DiagonalMatrix((DenseVector(rmFlatValues(mainDiagonalIndices)) *^ diagonalValue).items)
         // TODO: check case _
         case _ => !!!("matcher for @matrix argument in DenseFlatMatrix.*^^(matrix: Matr[T]) is not specified.")
       }
@@ -193,7 +197,7 @@ trait Matrices extends Vectors { self: LADsl =>
     def rmValues = Collection.indexRange(numRows).map(_ => replicatedRow).flatMap(row => row.items) // TODO: hack
     //def diagonalValues = Collection.indexRange(Math.min(numRows, numColumns)).map(i => replicatedRow(i))
 
-    @OverloadId("rows") 
+    @OverloadId("rows")
     def apply(iRows: Coll[Int])(implicit o: Overloaded1): Matr[T] = ReplicatedMatrix(replicatedRow, iRows.length)
     @OverloadId("row")
     def apply(row: Rep[Int]): Vec[T] = replicatedRow
@@ -283,7 +287,7 @@ trait Matrices extends Vectors { self: LADsl =>
       Collection(SArray.tabulate(numColumns) { j => DenseVector(rows.map(_(j)))})
     }
     def numRows = rows.length
-    def rmValues: Rep[Collection[T]] = rows.flatMap(row => row.items)
+    def rmFlatValues: Rep[Collection[T]] = rows.flatMap(row => row.items)
     def constItem = zeroValue
     def diagonalValues = {
       val width = Math.min(numRows, numColumns)
@@ -384,8 +388,8 @@ trait Matrices extends Vectors { self: LADsl =>
   abstract class ConstMatrix[T](val constItem: Rep[T], val numColumns: Rep[Int], val numRows: Rep[Int])
                                (implicit val eT: Elem[T]) extends Matrix[T] {
 
-    def rmValues = Collection.replicate(numColumns * numRows, constItem)
-    def items = rmValues
+    def rmFlatValues = Collection.replicate(numColumns * numRows, constItem)
+    def items = rmFlatValues
     def columns = Collection.replicate(numColumns, ConstVector(constItem, numRows))
     def rows = Collection.replicate(numRows, ConstVector(constItem, numColumns))
     def diagonalValues = Collection.replicate(Math.min(numRows, numColumns), constItem)
@@ -482,10 +486,10 @@ trait Matrices extends Vectors { self: LADsl =>
 
     def numColumns: Rep[Int] = diagonalValues.length
     def numRows: Rep[Int] = numColumns
-    def rmValues = SparseVectorBoxed(
+    def rmFlatValues = SparseVectorBoxed(
       Collection.indexRange(numColumns).map(i => (numColumns * i + i, diagonalValues(i))),
       numColumns * numColumns).items
-    def items = rmValues
+    def items = rmFlatValues
     def constItem = zeroValue
     def replicatedRow: Vec[T] = ConstVector(zeroValue, numColumns) // TODO: create ZeroVector if it's introduced
 
@@ -567,10 +571,10 @@ trait Matrices extends Vectors { self: LADsl =>
                                        (implicit val eT: Elem[T]) extends Matrix[T] {
 
     def numRows: Rep[Int] = numColumns
-    def rmValues = SparseVectorBoxed(
+    def rmFlatValues = SparseVectorBoxed(
       Collection.indexRange(numColumns).map(i => (numColumns * i + i, constItem)),
       numColumns * numColumns).items
-    def items = rmValues
+    def items = rmFlatValues
     def diagonalValues = Collection.replicate(numColumns, constItem)
     def replicatedRow: Vec[T] = ZeroVector[T](numColumns) // TODO: create ZeroVector if it's introduced
 

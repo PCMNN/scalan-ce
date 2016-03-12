@@ -112,14 +112,14 @@ class LASuite extends BaseShouldTests {
 
     cm.numColumns should be(fm.numColumns)
     cm.numRows should be(fm.numRows)
-    cm.rmValues should be(fm.rmValues)
+    cm.rmFlatValues should be(fm.rmFlatValues)
     cm.apply(1).items should be(fm.apply(1).items)
     cm.countNonZeroesByColumns.items should be(fm.countNonZeroesByColumns.items)
     cm.*(dv).items should be(fm.*(dv).items)
-    cm.*(fm.transpose).rmValues should be(fm.*(cm.transpose).rmValues)
-    cm.+^^(fm).rmValues should be(fm.+^^(cm).rmValues)
-    cm.*^^(fm).rmValues should be(fm.*^^(cm).rmValues)
-    cm.*^^(2.0).rmValues should be(fm.*^^(2.0).rmValues)
+    cm.*(fm.transpose).rmFlatValues should be(fm.*(cm.transpose).rmFlatValues)
+    cm.+^^(fm).rmFlatValues should be(fm.+^^(cm).rmFlatValues)
+    cm.*^^(fm).rmFlatValues should be(fm.*^^(cm).rmFlatValues)
+    cm.*^^(2.0).rmFlatValues should be(fm.*^^(2.0).rmFlatValues)
 
   }
 
@@ -131,7 +131,7 @@ class LASuite extends BaseShouldTests {
 
     dm.numColumns should be(fm.numColumns)
     dm.numRows should be(fm.numRows)
-    dm.rmValues should be(fm.rmValues)
+    dm.rmFlatValues should be(fm.rmFlatValues)
     dm.apply(1).items should be(fm.apply(1).items)
     dm.apply(2).items should be(fm.apply(2).items)
     dm.rows(2).items should be(fm.rows(2).items)
@@ -139,10 +139,10 @@ class LASuite extends BaseShouldTests {
     dm.apply(1, 2) should be(fm.apply(1, 2))
     dm.countNonZeroesByColumns.items should be(fm.countNonZeroesByColumns.items)
     dm.*(dv).items should be(fm.*(dv).items)
-    dm.*(fm.transpose).rmValues should be(fm.*(dm.transpose).rmValues)
-    dm.+^^(fm).rmValues should be(fm.+^^(dm).rmValues)
-    dm.*^^(fm).rmValues should be(fm.*^^(dm).rmValues)
-    dm.*^^(2.0).rmValues should be(fm.*^^(2.0).rmValues)
+    dm.*(fm.transpose).rmFlatValues should be(fm.*(dm.transpose).rmFlatValues)
+    dm.+^^(fm).rmFlatValues should be(fm.+^^(dm).rmFlatValues)
+    dm.*^^(fm).rmFlatValues should be(fm.*^^(dm).rmFlatValues)
+    dm.*^^(2.0).rmFlatValues should be(fm.*^^(2.0).rmFlatValues)
 
   }
 
