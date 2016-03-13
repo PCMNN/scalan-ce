@@ -24,8 +24,7 @@ trait Matrices extends Vectors { self: LADsl =>
 
     def rmFlatValues: Rep[Collection[T]]
     def zeroValue = eT.defaultRepValue
-    def constItem: Rep[T]
-    def diagonalValues: Rep[Collection[T]]
+    def mainDiagonal: Rep[Collection[T]]
     def replicatedRow: Vec[T]
 
     @OverloadId("rowsByVector")
@@ -78,23 +77,21 @@ trait Matrices extends Vectors { self: LADsl =>
   abstract class DenseFlatMatrix[T](val rmFlatValues: Rep[Collection[T]], val numColumns: Rep[Int])
                                    (implicit val eT: Elem[T]) extends Matrix[T] {
 
-    def items = rmFlatValues
-    def constItem = zeroValue
     def numRows: Rep[Int] = rmFlatValues.length /! numColumns
     def columns: Rep[Collection[Vector[T]]] = {
       Collection.indexRange(numColumns).map(i => DenseVector(Collection(rmFlatValues.arr.stride(i, numRows, numColumns))))
     }
     def rows: Coll[DenseVector[T]] = Collection(rmFlatValues.arr.grouped(numColumns).map(vs => DenseVector(Collection(vs))))
-    def diagonalValues = rmFlatValues(Collection.indexRange(Math.min(numRows, numColumns)).map(i => i * numColumns + i))
+    def mainDiagonal = rmFlatValues(Collection.indexRange(Math.min(numRows, numColumns)).map(i => i * numColumns + i))
     def replicatedRow: Vec[T] = ConstVector(zeroValue, numColumns) // TODO: create ZeroVector if it's introduced
 
     @OverloadId("rows")
     def apply(iRows: Coll[Int])(implicit o: Overloaded1): Matr[T] = {
-      DenseFlatMatrix(iRows.map(i => items.slice(numColumns * i, numColumns)).flatMap(v => v), numColumns)
+      DenseFlatMatrix(iRows.map(i => rmFlatValues.slice(numColumns * i, numColumns)).flatMap(v => v), numColumns)
     }
     @OverloadId("row")
     def apply(row: Rep[Int]): Vec[T] = DenseVector(rmFlatValues.slice(row * numColumns, numColumns))
-    def apply(row: Rep[Int], column: Rep[Int]): Rep[T] = items(toCellIndex(row, column))
+    def apply(row: Rep[Int], column: Rep[Int]): Rep[T] = rmFlatValues(toCellIndex(row, column))
 
     def mapRowsBy[R: Elem](f: Rep[Vector[T] => Vector[R] @uncheckedVariance]): Matr[R] = {
       // TODO: is it efficient?
@@ -183,7 +180,7 @@ trait Matrices extends Vectors { self: LADsl =>
     }
 
     def average(implicit f: Fractional[T], m: RepMonoid[T]): Rep[T] = {
-      items.reduce / items.length.to[T]
+      rmFlatValues.reduce / rmFlatValues.length.to[T]
     }
   }
 
@@ -288,8 +285,7 @@ trait Matrices extends Vectors { self: LADsl =>
     }
     def numRows = rows.length
     def rmFlatValues: Rep[Collection[T]] = rows.flatMap(row => row.items)
-    def constItem = zeroValue
-    def diagonalValues = {
+    def mainDiagonal = {
       val width = Math.min(numRows, numColumns)
       Collection.indexRange(width).map(i => rows(i)(i))
     }
@@ -372,9 +368,9 @@ trait Matrices extends Vectors { self: LADsl =>
         case CompoundMatrix(_, _) => res
         case ConstMatrix(_, _, _) => res
         case DiagonalMatrix(diagonal) =>
-          DiagonalMatrix((diagonalValues zip diagonal).map { case Pair(v, d) => v * d })
+          DiagonalMatrix((mainDiagonal zip diagonal).map { case Pair(v, d) => v * d })
         case ConstDiagonalMatrix(diagonalValue, width) =>
-          DiagonalMatrix(diagonalValues.map(v => v * diagonalValue))
+          DiagonalMatrix(mainDiagonal.map(v => v * diagonalValue))
         case _ => matrix *^^ self
       }
     }
@@ -392,7 +388,7 @@ trait Matrices extends Vectors { self: LADsl =>
     def items = rmFlatValues
     def columns = Collection.replicate(numColumns, ConstVector(constItem, numRows))
     def rows = Collection.replicate(numRows, ConstVector(constItem, numColumns))
-    def diagonalValues = Collection.replicate(Math.min(numRows, numColumns), constItem)
+    def mainDiagonal = Collection.replicate(Math.min(numRows, numColumns), constItem)
     def replicatedRow: Vec[T] = ConstVector(zeroValue, numColumns) // TODO: create ZeroVector if it's introduced
 
     @OverloadId("rows")
@@ -481,32 +477,31 @@ trait Matrices extends Vectors { self: LADsl =>
     def average(implicit f: Fractional[T], m: RepMonoid[T]): Rep[T] = constItem
   }
 
-  abstract class DiagonalMatrix[T](val diagonalValues: Rep[Collection[T]])
+  abstract class DiagonalMatrix[T](val mainDiagonal: Rep[Collection[T]])
                                   (implicit val eT: Elem[T]) extends Matrix[T] {
 
-    def numColumns: Rep[Int] = diagonalValues.length
+    def numColumns: Rep[Int] = mainDiagonal.length
     def numRows: Rep[Int] = numColumns
     def rmFlatValues = SparseVectorBoxed(
-      Collection.indexRange(numColumns).map(i => (numColumns * i + i, diagonalValues(i))),
+      Collection.indexRange(numColumns).map(i => (numColumns * i + i, mainDiagonal(i))),
       numColumns * numColumns).items
     def items = rmFlatValues
-    def constItem = zeroValue
     def replicatedRow: Vec[T] = ConstVector(zeroValue, numColumns) // TODO: create ZeroVector if it's introduced
 
     def columns: Rep[Collection[Vector[T]]] = Collection.indexRange(numColumns).map { i =>
-      SparseVector(Collection.replicate(1, i), diagonalValues.slice(i, 1), numColumns)
+      SparseVector(Collection.replicate(1, i), mainDiagonal.slice(i, 1), numColumns)
     }
     def rows: Coll[Vector[T]] = Collection.indexRange(numColumns).map { i =>
-      SparseVector(Collection.singleton(i), diagonalValues.slice(i, 1), numRows)
+      SparseVector(Collection.singleton(i), mainDiagonal.slice(i, 1), numRows)
     }
 
     @OverloadId("rows")
     def apply(iRows: Coll[Int])(implicit o: Overloaded1): Matr[T] = {
-      DiagonalMatrix(iRows.map(i => diagonalValues(i)))
+      DiagonalMatrix(iRows.map(i => mainDiagonal(i)))
     }
     @OverloadId("row")
-    def apply(row: Rep[Int]): Vec[T] = SparseVector(Collection.replicate(1, row), diagonalValues.slice(row, 1), numColumns)
-    def apply(row: Rep[Int], column: Rep[Int]): Rep[T] = IF (row === column) THEN diagonalValues(row) ELSE eT.defaultRepValue
+    def apply(row: Rep[Int]): Vec[T] = SparseVector(Collection.replicate(1, row), mainDiagonal.slice(row, 1), numColumns)
+    def apply(row: Rep[Int], column: Rep[Int]): Rep[T] = IF (row === column) THEN mainDiagonal(row) ELSE eT.defaultRepValue
 
     def mapRowsBy[R: Elem](f: Rep[Vector[T] => Vector[R] @uncheckedVariance]): Matr[R] = {
       DenseFlatMatrix.fromRows(rows.mapBy(f), numColumns)
@@ -515,7 +510,7 @@ trait Matrices extends Vectors { self: LADsl =>
     def transpose(implicit n: Numeric[T]): Matr[T] = self
 
     // TODO: inconsistent, no respect towards monoid operation over zero values, fix
-    def reduceByColumns(implicit m: RepMonoid[T], n: Numeric[T]): Vec[T] = DenseVector(diagonalValues)
+    def reduceByColumns(implicit m: RepMonoid[T], n: Numeric[T]): Vec[T] = DenseVector(mainDiagonal)
     def sumByRows(implicit n: Numeric[T]): Vec[T] = ???
     def sumByColumns(implicit n: Numeric[T]): Vec[T] = ???
 
@@ -524,17 +519,17 @@ trait Matrices extends Vectors { self: LADsl =>
       matrix match {
         case DenseFlatMatrix(rmValuesB, width) =>
           // TODO: check if there is excessive materialization in @diagonalReplicated
-          val diagonalReplicated = diagonalValues.flatMap(v => Collection.replicate(width, v))
+          val diagonalReplicated = mainDiagonal.flatMap(v => Collection.replicate(width, v))
           DenseFlatMatrix((DenseVector(rmValuesB) *^ DenseVector(diagonalReplicated)).items, width)
         case CompoundMatrix(rowsB, width) =>
-          CompoundMatrix((diagonalValues zip rowsB).map { case Pair(d, v) => v *^ d }, width)
+          CompoundMatrix((mainDiagonal zip rowsB).map { case Pair(d, v) => v *^ d }, width)
         case ConstMatrix(value, width, _) =>
-          val rowsConstant = diagonalValues.map(v => ConstVector(v * value, width))
+          val rowsConstant = mainDiagonal.map(v => ConstVector(v * value, width))
           CompoundMatrix(rowsConstant, width)
         case DiagonalMatrix(diagonalValues1) =>
-          DiagonalMatrix((DenseVector(diagonalValues) *^ DenseVector(diagonalValues1)).items)
+          DiagonalMatrix((DenseVector(mainDiagonal) *^ DenseVector(diagonalValues1)).items)
         case ConstDiagonalMatrix(diagonalValue, _) =>
-          DiagonalMatrix((DenseVector(diagonalValues) *^ diagonalValue).items)
+          DiagonalMatrix((DenseVector(mainDiagonal) *^ diagonalValue).items)
         // TODO: check case _
         case _ => !!!("matcher for @matrix argument in DiagonalMatrix.*(matrix: Matr[T]) is not specified.")
       }
@@ -544,9 +539,9 @@ trait Matrices extends Vectors { self: LADsl =>
     def +^^(matrix: Matr[T])(implicit n: Numeric[T]): Matr[T] = {
       matrix match {
         case DiagonalMatrix(diagonalValues1) =>
-          DiagonalMatrix((DenseVector(diagonalValues) +^ DenseVector(diagonalValues1)).items)
+          DiagonalMatrix((DenseVector(mainDiagonal) +^ DenseVector(diagonalValues1)).items)
         case ConstDiagonalMatrix(diagonalValue, _) =>
-          DiagonalMatrix((DenseVector(diagonalValues) +^ diagonalValue).items)
+          DiagonalMatrix((DenseVector(mainDiagonal) +^ diagonalValue).items)
         case _ => matrix +^^ self
       }
     }
@@ -555,15 +550,15 @@ trait Matrices extends Vectors { self: LADsl =>
     def *^^(matrix: Matr[T])(implicit n: Numeric[T]): Matr[T] = {
       matrix match {
         case DiagonalMatrix(diagonalValues1) =>
-          DiagonalMatrix((DenseVector(diagonalValues) *^ DenseVector(diagonalValues1)).items)
+          DiagonalMatrix((DenseVector(mainDiagonal) *^ DenseVector(diagonalValues1)).items)
         case ConstDiagonalMatrix(diagonalValue, _) =>
-          DiagonalMatrix((DenseVector(diagonalValues) *^ diagonalValue).items)
+          DiagonalMatrix((DenseVector(mainDiagonal) *^ diagonalValue).items)
         case _ => matrix *^^ self
       }
     }
 
     def average(implicit f: Fractional[T], m: RepMonoid[T]): Rep[T] = {
-      diagonalValues.reduce / diagonalValues.length.to[T]
+      mainDiagonal.reduce / mainDiagonal.length.to[T]
     }
   }
 
@@ -575,7 +570,7 @@ trait Matrices extends Vectors { self: LADsl =>
       Collection.indexRange(numColumns).map(i => (numColumns * i + i, constItem)),
       numColumns * numColumns).items
     def items = rmFlatValues
-    def diagonalValues = Collection.replicate(numColumns, constItem)
+    def mainDiagonal = Collection.replicate(numColumns, constItem)
     def replicatedRow: Vec[T] = ZeroVector[T](numColumns) // TODO: create ZeroVector if it's introduced
 
     def rows: Coll[Vector[T]] = Collection.indexRange(numColumns).map { i =>
@@ -640,7 +635,7 @@ trait Matrices extends Vectors { self: LADsl =>
     }
 
     def average(implicit f: Fractional[T], m: RepMonoid[T]): Rep[T] = {
-      diagonalValues.reduce / diagonalValues.length.to[T]
+      mainDiagonal.reduce / mainDiagonal.length.to[T]
     }
   }
 
