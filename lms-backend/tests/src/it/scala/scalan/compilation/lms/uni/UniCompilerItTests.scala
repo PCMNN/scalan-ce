@@ -20,10 +20,10 @@ trait UniCompilerTestProg extends MsfFuncs with LinearAlgebraExamples {
     p+2.0
   }
 
-  lazy val mapArray = fun { p: Rep[Array[Double]] =>  //Rep[(Array[Array[Double]], Array[Double])]
-    val vector = DenseVector(Collection(p))
-    val res = vector.mapBy( fun{ r => r + 2.0 } )
-    res.items.arr
+  lazy val mapArray = fun { p: Rep[Array[Double]] =>
+    val coll = Collection(p)
+    val res = coll.mapBy( fun { r => r + 2.0 } )
+    res.arr
   }
 
   lazy val zipArray = fun {x: Rep[Array[Int]] =>
