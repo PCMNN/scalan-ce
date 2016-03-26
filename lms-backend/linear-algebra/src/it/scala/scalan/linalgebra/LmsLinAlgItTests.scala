@@ -16,14 +16,14 @@ abstract class LmsLinAlgItTests extends BaseItTests[LinearAlgebraExamples](new M
 
   val compilerConfigU = LmsCompilerScalaConfig().withSbtConfig(SbtConfig(scalaVersion = "2.11.2"))
 
-  def sparseVectorData(arr: Array[Double]) = {
-    val (is, vs) = (arr.indices.toArray zip arr).filter(p => p._2 != 0.0).unzip
-    (is, (vs, arr.length))
+  def toSparse(arr: Array[Double]) = (arr.indices.toArray zip arr).filter(p => Math.abs(p._2) > Double.MinPositiveValue)
+
+  def sparseVectorData(array: Array[Double]) = {
+    val (is, vs) = toSparse(array).unzip
+    (is, (vs, array.length))
   }
-  def sparseVectorBoxedData(arr: Array[Double]) = {
-    val nonZeroes = (arr.indices.toArray zip arr).filter(p => p._2 != 0.0)
-    (nonZeroes, arr.length)
-  }
+
+  def sparseVectorBoxedData(array: Array[Double]) = (toSparse(array), array.length)
 
   val defaultCompilers = compilers(progStaged, cwc(progStagedU)(compilerConfigU))
   val progStagedOnly = compilers(progStaged)
