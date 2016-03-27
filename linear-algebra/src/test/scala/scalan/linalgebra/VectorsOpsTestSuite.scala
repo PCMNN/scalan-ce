@@ -8,7 +8,7 @@ class VectorsOpsTestSuite extends BaseViewTests {
 
   class Ctx extends TestCompilerContext {
 
-    class ScalanCake extends ScalanDslExp with LinearAlgebraExamples with MatricesDslExp {
+    class ScalanCake extends ScalanDslExp with LinearAlgebraExamples with LADslExp {
       override val cacheElems = false
     }
 

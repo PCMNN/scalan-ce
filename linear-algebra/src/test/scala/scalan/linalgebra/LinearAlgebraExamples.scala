@@ -1,6 +1,6 @@
 package scalan.linalgebra
 
-trait LinearAlgebraExamples extends MatricesDsl {
+trait LinearAlgebraExamples extends LADsl {
 
   def vvm[T](v1: Vec[T], v2: Vec[T])(implicit eT: Elem[T], n: Numeric[T]): Vec[T] = v1 *^ v2
   def vva[T](v1: Vec[T], v2: Vec[T])(implicit eT: Elem[T], n: Numeric[T]): Vec[T] = v1 +^ v2
