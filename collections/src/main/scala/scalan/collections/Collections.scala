@@ -34,6 +34,13 @@ trait Collections { self: CollectionsDsl =>
     def append(value: Rep[Item @uncheckedVariance]): Coll[Item]  // = Collection(arr.append(value))
     def foldLeft[S: Elem](init: Rep[S], f: Rep[((S, Item)) => S]): Rep[S] = arr.fold(init, f)
     def sortBy[O: Elem](by: Rep[Item => O])(implicit o: Ordering[O]): Coll[Item]
+    def innerJoin[B, K, R](ys: Coll[B], a: Rep[Item => K], b: Rep[B => K], f: Rep[((Item, B)) => R])
+                          (implicit ordK: Ordering[K], nK: Numeric[K], selfType: Elem[Array[(K, R)]],
+                           eB: Elem[B], eK: Elem[K], eR: Elem[R]): Coll[(K, R)] = iJoin(this, ys, a, b, f)
+    def outerJoin[B, K, R](ys: Coll[B], a: Rep[Item => K], b: Rep[B => K],
+                           f: Rep[((Item, B)) => R], f1: Rep[Item => R], f2: Rep[B => R])
+                          (implicit ordK: Ordering[K], nK: Numeric[K], selfType: Elem[Array[(K, R)]],
+                           eB: Elem[B], eK: Elem[K], eR: Elem[R]): Coll[(K, R)] = oJoin(this, ys, a, b, f, f1, f2)
     /*def scan(implicit m: RepMonoid[A @uncheckedVariance]): Rep[(Collection[A], A)] = {
       val arrScan = arr.scan(m)
       (Collection(arrScan._1), arrScan._2)
@@ -577,6 +584,15 @@ trait CollectionsDsl extends impl.CollectionsAbs with SeqsDsl {
   def pairColl_outerJoin[K, B, C, R](xs: PairColl[K, B], ys: PairColl[K, C], f: Rep[((B, C)) => R], f1: Rep[B => R], f2: Rep[C => R])
                                     (implicit ordK: Ordering[K], selfType: Elem[Array[(K, R)]],
                                      eK: Elem[K], eR: Elem[R], eB: Elem[B], eC: Elem[C]): Rep[Array[(K, R)]]
+
+  def iJoin[A, B, K, R](xs: Coll[A], ys: Coll[B], a: Rep[A => K], b: Rep[B => K], f: Rep[((A, B)) => R])
+                       (implicit ordK: Ordering[K], nK: Numeric[K], selfType: Elem[Array[(K, R)]],
+                        eA: Elem[A], eB: Elem[B], eK: Elem[K], eR: Elem[R]): Coll[(K, R)]
+
+  def oJoin[A, B, K, R](xs: Coll[A], ys: Coll[B], a: Rep[A => K], b: Rep[B => K],
+                        f: Rep[((A, B)) => R], f1: Rep[A => R], f2: Rep[B => R])
+                       (implicit ordK: Ordering[K], nK: Numeric[K], selfType: Elem[Array[(K, R)]],
+                        eA: Elem[A], eB: Elem[B], eK: Elem[K], eR: Elem[R]): Coll[(K, R)]
 }
 
 trait CollectionsDslStd extends impl.CollectionsStd with SeqsDslStd {
@@ -697,6 +713,71 @@ trait CollectionsDslStd extends impl.CollectionsStd with SeqsDslStd {
     }
     buffer.toArray
   }
+
+  def iJoin[A, B, K, R](xs: Coll[A], ys: Coll[B], a: Rep[A => K], b: Rep[B => K], f: Rep[((A, B)) => R])
+                                 (implicit ordK: Ordering[K], nK: Numeric[K], selfType: Elem[Array[(K, R)]],
+                                  eA: Elem[A], eB: Elem[B], eK: Elem[K], eR: Elem[R]): Coll[(K, R)] = {
+    val res = mutable.ArrayBuilder.make[(K, R)]
+    var i = 0
+    var j = 0
+    val n1 = xs.length
+    val n2 = ys.length
+    while (i < n1 && j < n2) {
+      val x = xs(i)
+      val y = ys(j)
+      val k = a(x)
+      val l = b(y)
+      val cmp = ordK.compare(k, l)
+      if (cmp == 0) {
+        res += ((k, f((x, y))))
+        i = i + 1
+        j = j + 1
+      } else if (cmp < 0) { i = i + 1 } else { j = j + 1 }
+    }
+    Collection(res.result)
+  }
+
+  def oJoin[A, B, K, R](xs: Coll[A], ys: Coll[B], a: Rep[A => K], b: Rep[B => K],
+                                  f: Rep[((A, B)) => R], f1: Rep[A => R], f2: Rep[B => R])
+                                 (implicit ordK: Ordering[K], nK: Numeric[K], selfType: Elem[Array[(K, R)]],
+                                  eA: Elem[A], eB: Elem[B], eK: Elem[K], eR: Elem[R]): Coll[(K, R)] = {
+    val res = mutable.ArrayBuilder.make[(K, R)]
+    var i = 0
+    var j = 0
+    val n1 = xs.length
+    val n2 = ys.length
+    while (i < n1 || j < n2) {
+      if (i == n1) {
+        val y = ys(j)
+        val l = b(y)
+        res += ((l, f2(y)))
+        j = j + 1
+      } else if (j == n2) {
+        val x = xs(i)
+        val k = a(x)
+        res += ((k, f1(x)))
+        i = i + 1
+      } else {
+        val x = xs(i)
+        val y = ys(j)
+        val k = a(x)
+        val l = b(y)
+        val cmp = ordK.compare(k, l)
+        if (cmp == 0) {
+          res += ((k, f((x, y))))
+          i = i + 1
+          j = j + 1
+        } else if (cmp < 0) {
+          res += ((k, f1(x)))
+          i = i + 1
+        } else {
+          res += ((l, f2(y)))
+          j = j + 1
+        }
+      }
+    }
+    Collection(res.result)
+  }
 }
 
 trait CollectionsDslExp extends impl.CollectionsExp with SeqsDslExp {
@@ -744,6 +825,19 @@ trait CollectionsDslExp extends impl.CollectionsExp with SeqsDslExp {
   def pairColl_outerJoin[K, B, C, R](xs: PairColl[K, B], ys: PairColl[K, C], f: Rep[((B, C)) => R], f1: Rep[B => R], f2: Rep[C => R])
                                     (implicit ordK: Ordering[K], selfType: Elem[Array[(K, R)]], eK: Elem[K], eR: Elem[R], eB: Elem[B], eC: Elem[C]): Rep[Array[(K, R)]] = {
     ArrayOuterJoin(xs.arr, ys.arr, f, f1, f2)
+  }
+
+  def iJoin[A, B, K, R](xs: Coll[A], ys: Coll[B], a: Rep[A => K], b: Rep[B => K], f: Rep[((A, B)) => R])
+                       (implicit ordK: Ordering[K], nK: Numeric[K], selfType: Elem[Array[(K, R)]],
+                        eA: Elem[A], eB: Elem[B], eK: Elem[K], eR: Elem[R]): Coll[(K, R)] = {
+    Collection(InnerJoin(xs.arr, ys.arr, a, b, f))
+  }
+
+  def oJoin[A, B, K, R](xs: Coll[A], ys: Coll[B], a: Rep[A => K], b: Rep[B => K],
+                        f: Rep[((A, B)) => R], f1: Rep[A => R], f2: Rep[B => R])
+                       (implicit ordK: Ordering[K], nK: Numeric[K], selfType: Elem[Array[(K, R)]],
+                        eA: Elem[A], eB: Elem[B], eK: Elem[K], eR: Elem[R]): Coll[(K, R)] = {
+    Collection(OuterJoin(xs.arr, ys.arr, a, b, f, f1, f2))
   }
 
   case class ArrayInnerJoin[K, B, C, R](xs: Exp[Array[(K, B)]], ys: Exp[Array[(K, C)]], f: Exp[((B, C)) => R])
